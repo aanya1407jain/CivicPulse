@@ -1,0 +1,31 @@
+# CivicPulse — Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# ── Core Application ──────────────────────────────────────────────────────────
+streamlit>=1.35.0
+
+# ── Google API Client ─────────────────────────────────────────────────────────
+google-api-python-client>=2.120.0
+google-auth>=2.29.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+
+# ── HTTP & Data ───────────────────────────────────────────────────────────────
+requests>=2.31.0
+urllib3>=2.0.0
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dateutil>=2.9.0
+pytz>=2024.1
+
+# ── Accessibility & i18n ──────────────────────────────────────────────────────
+# (Translate API handled via REST — no extra SDK required)
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest>=8.0.0
+pytest-cov>=5.0.0
+
+# ── Dev / Linting (optional) ──────────────────────────────────────────────────
+# ruff>=0.4.0
+# black>=24.0.0
+# mypy>=1.9.0

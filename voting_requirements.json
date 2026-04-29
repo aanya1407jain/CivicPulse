@@ -1,0 +1,23 @@
+{
+  "voting_requirements": {
+    "IN": {
+      "country_full_name": "Republic of India",
+      "age": 18,
+      "qualifying_dates": ["Jan 1", "April 1", "July 1", "Oct 1"],
+      "citizenship": "Indian Citizen (Non-Resident Indians eligible as Overseas Electors)",
+      "registration": "Form 6 for New Voters; Form 8 for Corrections",
+      "id_policy": "Voter ID (EPIC) is standard; 12 alternatives permitted",
+      "compulsory": false,
+      "system": "First-Past-the-Post (FPTP)",
+      "governing_body": "Election Commission of India (ECI)",
+      "helpline": "1950",
+      "voter_portal": "https://voters.eci.gov.in/",
+      "app": "Voter Helpline App (VHA)",
+      "conduct_rules": [
+        "Silence period starts 48 hours before poll end",
+        "Exit polls prohibited until last phase completes",
+        "Model Code of Conduct (MCC) in effect during cycle"
+      ]
+    }
+  }
+}

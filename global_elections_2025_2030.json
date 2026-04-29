@@ -1,0 +1,63 @@
+{
+  "elections_list": [
+    {
+      "country": "IN",
+      "name": "2026 Legislative Assembly Elections (WB, TN, KL, AS, PY)",
+      "date": "2026-05-04",
+      "type": "State Assembly (Counting Day)",
+      "status": "Polling Completed / Counting Pending"
+    },
+    {
+      "country": "IN",
+      "name": "19th Lok Sabha General Election",
+      "date": "2029-05-01",
+      "type": "Parliamentary",
+      "status": "Upcoming"
+    }
+  ],
+  "country_data": {
+    "IN": {
+      "country_name": "India",
+      "current_status": "Counting Day Approaching",
+      "next_election_date": "2026-05-04",
+      "election_name": "Assembly Elections 2026",
+      "registration_deadline": "Completed",
+      "polling_stations_count": "1,035,000+",
+      "key_dates": {
+        "Phase I (TN/WB/KL/AS)": "2026-04-23",
+        "Phase II (West Bengal)": "2026-04-29",
+        "Quiet Period (Silence)": "2026-05-02",
+        "Counting Day (All States)": "2026-05-04"
+      },
+      "requirements": [
+        "Indian Citizen & 18+ years of age",
+        "Must be on the Electoral Roll of the constituency",
+        "Voter ID (EPIC) or 12 approved alternative documents",
+        "No mobile phones allowed inside polling booth"
+      ],
+      "alternative_ids": [
+        "Aadhaar Card", "PAN Card", "Indian Passport", "Driving License",
+        "Passbook with Photo", "MGNREGA Job Card", "Pension Document",
+        "Service Identity Card", "UDID Card", "Smart Card (NPR)",
+        "Health Insurance Smart Card", "Official ID (MP/MLA)"
+      ],
+      "voting_methods": [
+        {
+          "name": "EVM & VVPAT",
+          "icon": "📟",
+          "description": "Electronic voting with paper slip verification."
+        },
+        {
+          "name": "Home Voting (Form 12D)",
+          "icon": "🏠",
+          "description": "For Seniors 85+ and PwD voters via mobile teams."
+        }
+      ],
+      "official_links": {
+        "Voter Search": "https://electoralsearch.eci.gov.in/",
+        "Voter Portal": "https://voters.eci.gov.in/",
+        "ECI Main": "https://eci.gov.in/"
+      }
+    }
+  }
+}
