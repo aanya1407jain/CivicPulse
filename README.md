@@ -1,3 +1,13 @@
+---
+title: CivicPulse India
+emoji: 🗳️
+colorFrom: yellow
+colorTo: green
+sdk: streamlit
+python_version: "3.11"
+app_file: app.py
+pinned: false
+---
 # 🗳️ CivicPulse — Global Election Intelligence Assistant
 
 > *Empowering citizens worldwide to participate in democracy — one election at a time.*
