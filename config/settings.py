@@ -116,5 +116,5 @@ CACHE_TTL = {
 CACHE_TTL_SECONDS = CACHE_TTL
 
 # ── Gemini Model ──────────────────────────────────────────────────────────────
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-2.0-flash"
 GEMINI_MAX_TOKENS = 512
