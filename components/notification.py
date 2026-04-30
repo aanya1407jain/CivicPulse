@@ -69,10 +69,11 @@ def render_notification_panel(
             with col1:
                 st.markdown(
                     f'<div role="listitem" '
-                    f'style="background:rgba(255,153,51,0.08);border-left:4px solid #ff9933;'
-                    f'border-radius:8px;padding:0.75rem 1rem;">'
-                    f'<div style="font-weight:600;font-size:0.9rem;color:#1a1a1a;">{safe_title}</div>'
-                    f'<div style="color:#444;font-size:0.8rem;">📅 {safe_date}</div>'
+                    f'style="background:#FFF3E8;border-left:4px solid #FF6B00;'
+                    f'border-radius:0 10px 10px 0;padding:0.85rem 1rem;'
+                    f'box-shadow:0 1px 3px rgba(255,107,0,0.10);">'
+                    f'<div style="font-weight:600;font-size:0.9rem;color:#1A1A2E;">{safe_title}</div>'
+                    f'<div style="color:#5C5C7A;font-size:0.8rem;margin-top:2px;">📅 {safe_date}</div>'
                     f"</div>",
                     unsafe_allow_html=True,
                 )
