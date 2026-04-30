@@ -1,17 +1,20 @@
 """
 CivicPulse — Interactive India Map Component
 =============================================
-Clickable state map showing election schedule, phase dates, and party strength.
-Uses SVG-based India map rendered via Streamlit HTML component.
+Complete data for all 28 States + 8 Union Territories of India.
+Shows current ruling party, assembly seats, last election, next due date,
+and 2026 election status where applicable.
 """
 
 from __future__ import annotations
 import streamlit as st
 from utils.location_utils import sanitize_text
 
-# ── State election data ────────────────────────────────────────────────────────
-INDIA_STATE_ELECTION_DATA = {
-     "West Bengal": {
+# ── Complete India State & UT Data ─────────────────────────────────────────────
+# status options: "completed" | "upcoming" | "not_due" | "no_assembly"
+ALL_INDIA_DATA = {
+    # ── 2026 ELECTION STATES (currently voting / counted) ─────────────────────
+    "West Bengal": {
         "type": "State",
         "region": "East India",
         "phase": "Phase I & II Complete",
@@ -707,40 +710,62 @@ INDIA_STATE_ELECTION_DATA = {
     },
 }
 
-
 STATUS_COLORS = {
     "completed": "#0E6B06",
-    "live": "#C62828",
-    "upcoming": "#2D3561",
-    "not_voting": "#CCCCCC",
+    "upcoming":  "#2D3561",
+    "not_due":   "#5C5C7A",
+    "no_assembly": "#AAAAAA",
 }
+
+STATUS_LABELS = {
+    "completed":   "✅ Voted 2026",
+    "upcoming":    "📅 Upcoming",
+    "not_due":     "🗓️ Not in 2026",
+    "no_assembly": "🏛️ No Assembly",
+}
+
+REGIONS = [
+    "All Regions",
+    "North India",
+    "South India",
+    "East India",
+    "West India",
+    "Central India",
+    "Northeast India",
+]
 
 
 def _state_info_card(state: str) -> None:
-    """Render detailed info card for a selected state."""
-    data = INDIA_STATE_ELECTION_DATA.get(state)
+    """Render detailed info card for a selected state/UT."""
+    data = ALL_INDIA_DATA.get(state)
     if not data:
-        st.info(f"No 2026 election data available for **{state}**.")
+        st.warning(f"No data found for **{state}**.")
         return
 
     status_color = STATUS_COLORS.get(data["status"], "#999")
-    status_labels = {"completed": "✅ Voting Complete", "live": "🔴 LIVE", "upcoming": "📅 Upcoming"}
-    status_text = status_labels.get(data["status"], "—")
+    status_text  = STATUS_LABELS.get(data["status"], "—")
+    rc = data["ruling_color"]
+
+    is_no_assembly = data["status"] == "no_assembly"
 
     st.markdown(
         f"""
-        <div style="background:linear-gradient(135deg, #FAFAF8, #FFFFFF);
-                    border-radius:16px;padding:20px;border:1px solid #E8E4DC;
-                    border-top:5px solid {data['ruling_color']};
+        <div style="background:linear-gradient(135deg,#FAFAF8,#FFFFFF);
+                    border-radius:16px;padding:22px;border:1px solid #E8E4DC;
+                    border-top:5px solid {rc};
                     box-shadow:0 4px 16px rgba(26,26,46,0.08);">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+
+            <!-- Header -->
+            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:18px;">
                 <div style="flex:1;">
                     <div style="font-weight:800;font-size:1.2rem;color:#1A1A2E;">
                         🗳️ {sanitize_text(state)}
                     </div>
-                    <div style="color:#5C5C7A;font-size:0.85rem;margin-top:2px;">
-                        {data['total_seats']} Assembly Seats · {sanitize_text(data['key_contest'])}
+                    <div style="color:#5C5C7A;font-size:0.82rem;margin-top:4px;">
+                        {sanitize_text(data['type'])} · {sanitize_text(data['region'])} ·
+                        Capital: {sanitize_text(data['capital'])}
                     </div>
+                    {f'<div style="color:#5C5C7A;font-size:0.82rem;margin-top:2px;">CM: <b style=color:#1A1A2E;>{sanitize_text(data["cm"])}</b></div>' if not is_no_assembly else ''}
                 </div>
                 <div style="background:{status_color}18;border:1px solid {status_color}40;
                              color:{status_color};font-weight:700;font-size:0.8rem;
@@ -748,37 +773,47 @@ def _state_info_card(state: str) -> None:
                     {status_text}
                 </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+            <!-- Stats grid -->
+            <div style="display:grid;grid-template-columns:1fr 1fr{'  1fr  1fr' if not is_no_assembly else ''};gap:10px;">
+                {"" if is_no_assembly else f'''
                 <div style="background:#F5F3EF;border-radius:10px;padding:12px;">
-                    <div style="font-size:0.72rem;color:#9090A8;font-weight:700;
-                                text-transform:uppercase;letter-spacing:0.05em;">Phase</div>
-                    <div style="font-weight:700;color:#1A1A2E;font-size:0.88rem;margin-top:4px;">
-                        {sanitize_text(data['phase'])}
-                    </div>
+                    <div style="font-size:0.7rem;color:#9090A8;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Assembly Seats</div>
+                    <div style="font-weight:700;color:#1A1A2E;font-size:0.95rem;margin-top:4px;">{data["total_seats"]}</div>
                 </div>
                 <div style="background:#F5F3EF;border-radius:10px;padding:12px;">
-                    <div style="font-size:0.72rem;color:#9090A8;font-weight:700;
-                                text-transform:uppercase;letter-spacing:0.05em;">Counting</div>
-                    <div style="font-weight:700;color:#1A1A2E;font-size:0.88rem;margin-top:4px;">
-                        {sanitize_text(data['counting_date'])}
-                    </div>
+                    <div style="font-size:0.7rem;color:#9090A8;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Ruling Party</div>
+                    <div style="font-weight:700;font-size:0.88rem;margin-top:4px;color:{rc};">{sanitize_text(data["ruling_party"])}</div>
                 </div>
                 <div style="background:#F5F3EF;border-radius:10px;padding:12px;">
-                    <div style="font-size:0.72rem;color:#9090A8;font-weight:700;
-                                text-transform:uppercase;letter-spacing:0.05em;">Ruling Party</div>
-                    <div style="font-weight:700;font-size:0.88rem;margin-top:4px;
-                                color:{data['ruling_color']};">
-                        {sanitize_text(data['ruling_party'])}
-                    </div>
+                    <div style="font-size:0.7rem;color:#9090A8;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Last Election</div>
+                    <div style="font-weight:700;color:#1A1A2E;font-size:0.88rem;margin-top:4px;">{data["last_election_year"] if data["last_election_year"] else "N/A"}</div>
                 </div>
                 <div style="background:#F5F3EF;border-radius:10px;padding:12px;">
-                    <div style="font-size:0.72rem;color:#9090A8;font-weight:700;
-                                text-transform:uppercase;letter-spacing:0.05em;">2021 Turnout</div>
-                    <div style="font-weight:700;color:#1A1A2E;font-size:0.88rem;margin-top:4px;">
-                        {sanitize_text(data['turnout_2021'])}
-                    </div>
+                    <div style="font-size:0.7rem;color:#9090A8;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Turnout</div>
+                    <div style="font-weight:700;color:#1A1A2E;font-size:0.88rem;margin-top:4px;">{sanitize_text(data["last_turnout"])}</div>
+                </div>
+                '''}
+                <div style="background:#F5F3EF;border-radius:10px;padding:12px;">
+                    <div style="font-size:0.7rem;color:#9090A8;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Polling Date</div>
+                    <div style="font-weight:700;color:#1A1A2E;font-size:0.82rem;margin-top:4px;">{sanitize_text(data["polling_date"])}</div>
+                </div>
+                <div style="background:#F5F3EF;border-radius:10px;padding:12px;">
+                    <div style="font-size:0.7rem;color:#9090A8;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">Next Due</div>
+                    <div style="font-weight:700;color:#1A1A2E;font-size:0.88rem;margin-top:4px;">{sanitize_text(data["next_election_due"])}</div>
                 </div>
             </div>
+
+            {"" if is_no_assembly else f'''
+            <!-- Result bar -->
+            <div style="margin-top:14px;background:#F5F3EF;border-radius:10px;padding:12px;">
+                <div style="font-size:0.7rem;color:#9090A8;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">
+                    Last Result ({data["last_election_year"]})
+                </div>
+                <div style="font-size:0.85rem;color:#1A1A2E;font-weight:600;">{sanitize_text(data["last_winner_seats"])}</div>
+                <div style="font-size:0.78rem;color:#5C5C7A;margin-top:4px;">Key contest: {sanitize_text(data["key_contest"])}</div>
+            </div>
+            '''}
         </div>
         """,
         unsafe_allow_html=True,
@@ -786,90 +821,140 @@ def _state_info_card(state: str) -> None:
 
 
 def render_india_map() -> None:
-    """Render the interactive India state election map."""
-    st.markdown("### 🗺️ India Election Map — 2026 Assembly Polls")
+    """Render the complete India election map with all states and UTs."""
+    st.markdown("### 🗺️ India Election Map — All States & Union Territories")
     st.caption(
-        "Select a state below to view election schedule, phase details, and party strength. "
-        "States highlighted are holding 2026 Assembly Elections."
+        "Complete data for all 28 States + 8 Union Territories · "
+        "Ruling party, last results, assembly seats, and 2026 election status."
     )
 
-    # ── State Selector (interactive dropdown acting as map clickthrough) ────────
-    col_select, col_legend = st.columns([2, 1])
+    # ── Summary metrics ────────────────────────────────────────────────────────
+    total_states = len([v for v in ALL_INDIA_DATA.values() if v["type"] == "State"])
+    voting_2026  = len([v for v in ALL_INDIA_DATA.values() if v["status"] == "completed"])
+    bjp_states   = len([v for v in ALL_INDIA_DATA.values() if "BJP" in v["ruling_party"] and v["status"] != "no_assembly"])
+    inc_states   = len([v for v in ALL_INDIA_DATA.values() if "INC" in v["ruling_party"] and v["status"] != "no_assembly"])
 
-    with col_select:
-        voting_states = list(INDIA_STATE_ELECTION_DATA.keys())
-        selected_state = st.selectbox(
-            "🔍 Select an Election State",
-            ["— Choose a State —"] + voting_states,
-            key="india_map_state_select",
-        )
-
-    with col_legend:
-        st.markdown(
-            """
-            <div style="background:#FAFAF8;border-radius:12px;padding:14px;
-                        border:1px solid #E8E4DC;font-size:0.78rem;">
-                <div style="font-weight:700;color:#1A1A2E;margin-bottom:8px;">
-                    🗺️ Map Legend
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                    <div style="width:12px;height:12px;background:#0E6B06;border-radius:50%;"></div>
-                    <span style="color:#5C5C7A;">Voting Completed</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                    <div style="width:12px;height:12px;background:#C62828;border-radius:50%;"></div>
-                    <span style="color:#5C5C7A;">Live / Counting</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;">
-                    <div style="width:12px;height:12px;background:#CCCCCC;border-radius:50%;"></div>
-                    <span style="color:#5C5C7A;">Not in 2026 cycle</span>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+    m1, m2, m3, m4 = st.columns(4)
+    with m1: st.metric("Total States", total_states)
+    with m2: st.metric("Voted in 2026", voting_2026, help="States/UTs with 2026 elections")
+    with m3: st.metric("BJP-led Govts", bjp_states, help="States/UTs where BJP leads coalition")
+    with m4: st.metric("INC-led Govts", inc_states, help="States/UTs where INC leads coalition")
 
     st.divider()
 
-    # ── State cards overview ───────────────────────────────────────────────────
-    if selected_state and selected_state != "— Choose a State —":
+    # ── Filters ────────────────────────────────────────────────────────────────
+    col_search, col_region, col_status = st.columns([2, 1.5, 1.5])
+    with col_search:
+        search = st.text_input(
+            "🔍 Search state, UT or capital",
+            placeholder="e.g. Mumbai, Bihar, Patna...",
+            key="map_search",
+        )
+    with col_region:
+        region_filter = st.selectbox("📍 Region", REGIONS, key="map_region")
+    with col_status:
+        status_filter = st.selectbox(
+            "🗳️ Election Status",
+            ["All", "Voted in 2026", "Not in 2026", "No Assembly"],
+            key="map_status",
+        )
+
+    # ── State selector ─────────────────────────────────────────────────────────
+    all_names = sorted(ALL_INDIA_DATA.keys())
+    selected_state = st.selectbox(
+        "🏛️ Select State / UT for full details",
+        ["— Select to view details —"] + all_names,
+        key="india_map_state_select",
+    )
+
+    if selected_state and selected_state != "— Select to view details —":
+        st.markdown("")
         _state_info_card(selected_state)
-    else:
-        # Show all states in a grid overview
-        st.markdown("#### 📋 All 2026 Election States at a Glance")
-        cols = st.columns(2)
-        for i, (state, data) in enumerate(INDIA_STATE_ELECTION_DATA.items()):
-            with cols[i % 2]:
-                status_color = STATUS_COLORS.get(data["status"], "#999")
-                st.markdown(
-                    f"""
-                    <div style="background:#FFFFFF;border-radius:12px;padding:14px;
-                                border:1px solid #E8E4DC;border-left:5px solid {data['ruling_color']};
-                                margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
-                        <div style="font-weight:700;color:#1A1A2E;font-size:0.95rem;">
-                            {sanitize_text(state)}
-                        </div>
-                        <div style="font-size:0.78rem;color:#5C5C7A;margin:4px 0;">
-                            {data['total_seats']} seats · {sanitize_text(data['polling_date'])}
-                        </div>
-                        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-                            <span style="background:{data['ruling_color']}22;color:{data['ruling_color']};
-                                         font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:20px;">
-                                {sanitize_text(data['ruling_party'])}
-                            </span>
-                            <span style="background:{status_color}18;color:{status_color};
-                                         font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:20px;">
-                                ● {data['status'].title()}
-                            </span>
-                        </div>
+        st.divider()
+
+    # ── Legend ─────────────────────────────────────────────────────────────────
+    st.markdown(
+        """
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+            <span style="display:flex;align-items:center;gap:6px;font-size:0.78rem;color:#5C5C7A;">
+                <span style="background:#0E6B06;border-radius:4px;width:14px;height:14px;display:inline-block;"></span>
+                Voted in 2026
+            </span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:0.78rem;color:#5C5C7A;">
+                <span style="background:#5C5C7A;border-radius:4px;width:14px;height:14px;display:inline-block;"></span>
+                Not in 2026 Cycle
+            </span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:0.78rem;color:#5C5C7A;">
+                <span style="background:#AAAAAA;border-radius:4px;width:14px;height:14px;display:inline-block;"></span>
+                No Legislative Assembly
+            </span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ── Apply filters ──────────────────────────────────────────────────────────
+    status_map = {
+        "Voted in 2026": "completed",
+        "Not in 2026": "not_due",
+        "No Assembly": "no_assembly",
+    }
+
+    filtered = {}
+    for name, data in ALL_INDIA_DATA.items():
+        if search and search.lower() not in name.lower() and search.lower() not in data.get("capital", "").lower():
+            continue
+        if region_filter != "All Regions" and data.get("region") != region_filter:
+            continue
+        if status_filter != "All" and data.get("status") != status_map.get(status_filter):
+            continue
+        filtered[name] = data
+
+    st.markdown(f"#### 📋 Showing {len(filtered)} of {len(ALL_INDIA_DATA)} states/UTs")
+
+    # ── Grid view ──────────────────────────────────────────────────────────────
+    cols = st.columns(3)
+    for i, (state, data) in enumerate(sorted(filtered.items())):
+        with cols[i % 3]:
+            sc = STATUS_COLORS.get(data["status"], "#999")
+            sl = STATUS_LABELS.get(data["status"], "—")
+            rc = data["ruling_color"]
+            st.markdown(
+                f"""
+                <div style="background:#FFFFFF;border-radius:12px;padding:14px;
+                            border:1px solid #E8E4DC;border-left:5px solid {rc};
+                            margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);
+                            min-height:130px;">
+                    <div style="font-weight:700;color:#1A1A2E;font-size:0.9rem;">
+                        {sanitize_text(state)}
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                    <div style="font-size:0.72rem;color:#9090A8;margin-top:2px;">
+                        {sanitize_text(data['type'])} · {sanitize_text(data['capital'])}
+                    </div>
+                    <div style="margin:8px 0 4px;">
+                        <span style="background:{rc}22;color:{rc};
+                                     font-size:0.7rem;font-weight:700;
+                                     padding:2px 8px;border-radius:20px;">
+                            {sanitize_text(data['ruling_party'])}
+                        </span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;">
+                        <span style="background:{sc}15;color:{sc};
+                                     font-size:0.68rem;font-weight:700;
+                                     padding:2px 8px;border-radius:20px;">
+                            {sl}
+                        </span>
+                        {f'<span style="font-size:0.68rem;color:#9090A8;">{data["total_seats"]} seats</span>' if data["total_seats"] > 0 else ''}
+                    </div>
+                    <div style="font-size:0.7rem;color:#9090A8;margin-top:6px;">
+                        Next: {sanitize_text(data['next_election_due'])}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
     st.divider()
-
-    # ── ECI Schedule Link ──────────────────────────────────────────────────────
     st.link_button(
         "📅 Full Election Schedule on ECI Website →",
         "https://eci.gov.in/elections/",
