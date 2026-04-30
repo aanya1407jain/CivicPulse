@@ -72,10 +72,11 @@ def render_checklist(handler: BaseRegionHandler, election_data: dict) -> None:
     st.markdown(
         """
         <div role="region" aria-label="Voter registration"
-             style="background:rgba(255,153,51,0.1);padding:15px;border-radius:10px;
-                    border-left:5px solid #ff9933;margin-top:20px;">
-            <strong>🗳️ Need to Register or Update?</strong><br>
-            <span style="font-size:0.9rem;color:#333;">
+             style="background:#FFF3E8;padding:16px 20px;border-radius:12px;
+                    border-left:5px solid #FF6B00;margin-top:20px;
+                    box-shadow:0 1px 4px rgba(255,107,0,0.12);">
+            <strong style="color:#1A1A2E;">🗳️ Need to Register or Update?</strong><br>
+            <span style="font-size:0.9rem;color:#5C5C7A;display:block;margin-top:4px;">
                 Use Form 6 for new registration or Form 8 for address changes.
             </span>
         </div>
@@ -95,10 +96,10 @@ def _render_step(step: ElectionStep, calendar_svc: CalendarService) -> None:
     is_done = st.session_state["checklist"].get(step.id, False)
 
     priority_color = {
-        "urgent":   "#b35900",   # darker saffron (contrast-safe on white)
-        "normal":   "#000080",
-        "optional": "#1a6b0a",   # darker green (contrast-safe on white)
-    }.get(step.priority, "#444")
+        "urgent":   "#D95200",   # deep saffron — readable on light bg
+        "normal":   "#2D3561",   # navy blue
+        "optional": "#0E6B06",   # deep green
+    }.get(step.priority, "#444444")
 
     col1, col2, col3 = st.columns([0.08, 0.70, 0.22])
 
@@ -127,13 +128,20 @@ def _render_step(step: ElectionStep, calendar_svc: CalendarService) -> None:
             else ""
         )
 
+        bg_colors = {
+            "urgent":   "#FFF3E8",
+            "normal":   "#EEF1FF",
+            "optional": "#F0FAF0",
+        }
+        card_bg = bg_colors.get(step.priority, "#FAFAF8")
         st.markdown(
             f'<div role="listitem" aria-label="{safe_title}" '
-            f'style="border-left:5px solid {priority_color};background:#fafafa;'
-            f'padding:10px;border-radius:4px;margin-bottom:5px;">'
+            f'style="border-left:5px solid {priority_color};background:{card_bg};'
+            f'padding:12px 16px;border-radius:0 10px 10px 0;margin-bottom:6px;'
+            f'box-shadow:0 1px 4px rgba(26,26,46,0.07);">'
             f'<div style="{title_style}">{safe_title}</div>'
-            f'<div style="color:#333;font-size:0.85rem;margin-top:2px;">{safe_desc}</div>'
-            f'<div style="margin-top:5px;">{deadline_html}</div>'
+            f'<div style="color:#5C5C7A;font-size:0.85rem;margin-top:3px;">{safe_desc}</div>'
+            f'<div style="margin-top:6px;">{deadline_html}</div>'
             f"</div>",
             unsafe_allow_html=True,
         )
