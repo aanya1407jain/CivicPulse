@@ -35,11 +35,11 @@ def render_map_view(election_data: dict, user_location: str) -> None:
         st.markdown(
             """
             <div role="region" aria-label="Official ECI booth search"
-                 style="background:rgba(255,153,51,0.05);padding:20px;border-radius:12px;
-                        border:1px solid #ff9933;border-left:6px solid #ff9933;
-                        margin-bottom:20px;">
-                <h4 style="color:#b35900;margin-top:0;">📍 Official ECI Booth Search</h4>
-                <p style="font-size:0.9rem;color:#555;">
+                 style="background:#FFF3E8;padding:20px;border-radius:14px;
+                        border:1px solid #FFD4A8;border-left:6px solid #FF6B00;
+                        margin-bottom:20px;box-shadow:0 2px 8px rgba(255,107,0,0.10);">
+                <h4 style="color:#D95200;margin-top:0;">📍 Official ECI Booth Search</h4>
+                <p style="font-size:0.9rem;color:#5C5C7A;">
                     Find your exact Part Number and Room Number using your EPIC number or name.
                 </p>
             </div>
@@ -108,12 +108,13 @@ def render_map_view(election_data: dict, user_location: str) -> None:
             st.markdown(
                 f"""
                 <div role="listitem"
-                     style="background:var(--background-color,#fff);
-                            border:1px solid #ddd;border-radius:12px;
-                            padding:1rem;margin-bottom:0.5rem;">
-                    <div style="font-weight:600;color:#138808;">🏛️ {safe_name}</div>
-                    <div style="font-size:0.85rem;color:#555;">{safe_address}</div>
-                    {"<div style='margin-top:4px;'><span style='font-size:0.75rem;background:#e8f5e9;color:#1b5e20;padding:2px 8px;border-radius:4px;'>♿ Wheelchair Accessible</span></div>" if station['accessible'] else ""}
+                     style="background:#FFFFFF;
+                            border:1px solid #E8E4DC;border-radius:12px;
+                            padding:1rem 1.2rem;margin-bottom:0.5rem;
+                            box-shadow:0 1px 4px rgba(26,26,46,0.07);">
+                    <div style="font-weight:700;color:#138808;font-size:0.95rem;">🏛️ {safe_name}</div>
+                    <div style="font-size:0.85rem;color:#5C5C7A;margin-top:2px;">{safe_address}</div>
+                    {"<div style='margin-top:6px;'><span style='font-size:0.75rem;background:#E8F5E6;color:#0E6B06;padding:3px 10px;border-radius:20px;font-weight:600;border:1px solid #B8E0B4;'>♿ Wheelchair Accessible</span></div>" if station['accessible'] else ""}
                 </div>
                 """,
                 unsafe_allow_html=True,
