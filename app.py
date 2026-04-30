@@ -2,6 +2,7 @@
 CivicPulse India — 2026 Assembly Intelligence
 =============================================
 Optimized for the May 4 Counting Day cycle.
+Updated: Added 7 new feature modules.
 """
 
 import streamlit as st
@@ -22,6 +23,16 @@ from components.timeline import render_timeline
 from components.checklist import render_checklist
 from components.map_view import render_map_view
 from components.notification import render_notification_panel
+
+# ── New feature components ─────────────────────────────────────────────────────
+from components.election_results import render_election_results
+from components.candidate_profiles import render_candidate_profiles
+from components.india_map import render_india_map
+from components.historical_trends import render_historical_trends
+from components.exit_poll_aggregator import render_exit_poll_aggregator
+from components.election_quiz import render_election_quiz
+from components.polling_experience import render_polling_experience
+
 from utils.location_utils import detect_country_from_input, parse_location, sanitize_text
 from utils.date_utils import days_until, get_election_status
 from utils.validators import validate_location_input
@@ -37,10 +48,6 @@ st.set_page_config(
 )
 
 # Inject lang attribute for screen readers (accessibility)
-st.markdown(
-    '<html lang="en">', unsafe_allow_html=True  # Streamlit strips <html> tags
-)
-# Alternative approach that actually works in Streamlit:
 st.markdown(
     """
     <script>
@@ -142,7 +149,6 @@ def apply_india_theme() -> None:
         [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
             color: #C8C4BC !important;
         }
-        /* Sidebar success / warning alerts */
         [data-testid="stSidebar"] .stAlert {
             background: rgba(255,255,255,0.10) !important;
             border: 1px solid rgba(255,255,255,0.18) !important;
@@ -155,7 +161,6 @@ def apply_india_theme() -> None:
         [data-testid="stSidebar"] hr {
             border-color: rgba(255,255,255,0.15) !important;
         }
-        /* Sidebar link button */
         [data-testid="stSidebar"] .stLinkButton a {
             background: rgba(255,107,0,0.20) !important;
             border: 1px solid rgba(255,107,0,0.40) !important;
@@ -184,14 +189,15 @@ def apply_india_theme() -> None:
             padding: 4px !important;
             gap: 4px !important;
             border: 1px solid var(--border) !important;
+            flex-wrap: wrap !important;
         }
         .stTabs [data-baseweb="tab"] {
             background: transparent !important;
             border-radius: 10px !important;
             color: var(--text-secondary) !important;
             font-weight: 600 !important;
-            font-size: 0.85rem !important;
-            padding: 8px 18px !important;
+            font-size: 0.82rem !important;
+            padding: 8px 14px !important;
             transition: all 0.2s ease !important;
         }
         .stTabs [aria-selected="true"] {
@@ -229,9 +235,6 @@ def apply_india_theme() -> None:
             border-radius: var(--radius-md) !important;
             border: none !important;
         }
-        .stAlert[data-baseweb="notification"] {
-            background: var(--saffron-lt) !important;
-        }
         div[data-testid="stInfo"] {
             background: #EEF2FF !important;
             border-left: 4px solid #4F6EF7 !important;
@@ -256,7 +259,6 @@ def apply_india_theme() -> None:
             border-radius: var(--radius-sm) !important;
             color: var(--navy) !important;
         }
-        /* Fix text inside alerts */
         div[data-testid="stInfo"] p,
         div[data-testid="stSuccess"] p,
         div[data-testid="stWarning"] p,
@@ -383,28 +385,9 @@ def apply_india_theme() -> None:
             letter-spacing: 0.04em !important;
         }
 
-        /* ─── STEP CARD ──────────────────────────────────────── */
-        .step-card {
-            background: var(--surface) !important;
-            border-left: 5px solid var(--saffron) !important;
-            color: var(--text-primary) !important;
-            padding: 16px 20px !important;
-            margin-bottom: 12px !important;
-            border-radius: 0 var(--radius-sm) var(--radius-sm) 0 !important;
-            box-shadow: var(--shadow-sm) !important;
-        }
-
         /* ─── CHECKBOX LABEL ─────────────────────────────────── */
         .stCheckbox label span {
             color: var(--text-primary) !important;
-        }
-
-        /* ─── CODE BLOCK ─────────────────────────────────────── */
-        .stCode, code {
-            background: var(--surface2) !important;
-            color: var(--navy) !important;
-            border: 1px solid var(--border) !important;
-            border-radius: var(--radius-sm) !important;
         }
 
         /* ─── SCROLLBAR ──────────────────────────────────────── */
@@ -430,7 +413,6 @@ def render_ai_assistant(election_data: dict) -> None:
     st.markdown("#### 🤖 AI Voter Assistant (Powered by Gemini)")
     st.caption("Ask anything about voting, your rights, or the election process.")
 
-    # Show conversation history
     for msg in st.session_state["ai_messages"]:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
@@ -484,15 +466,14 @@ def _call_gemini(question: str, election_data: dict) -> str:
         logger.error("Gemini call failed: %s", err)
 
         if "API_KEY_INVALID" in err or "invalid" in err.lower():
-            return "⚠️ **Invalid API key.** Check that `GOOGLE_API_KEY` is set correctly in your HF Space secrets."
+            return "⚠️ **Invalid API key.** Check that `GOOGLE_API_KEY` is set correctly."
         if "quota" in err.lower() or "429" in err:
-            return "⚠️ **Quota exceeded.** Your Gemini API free tier limit has been reached. Try again later."
+            return "⚠️ **Quota exceeded.** Your Gemini API free tier limit has been reached."
         if "not found" in err.lower() or "404" in err:
-            return "⚠️ **Model not found.** The Gemini model name may be incorrect or unavailable in your region."
+            return "⚠️ **Model not found.** The Gemini model name may be incorrect."
         if "permission" in err.lower() or "403" in err:
-            return "⚠️ **Permission denied.** Your API key may not have access to the Gemini API. Check Google AI Studio."
+            return "⚠️ **Permission denied.** Check your API key access."
 
-        # Show actual error for any other unknown failure
         return (
             f"⚠️ **Gemini error:** {err}\n\n"
             f"For election queries, call the ECI helpline at **{INDIA['VOTER_HELPLINE']}**."
@@ -538,6 +519,27 @@ def render_sidebar() -> None:
             INDIA["EPIC_SEARCH_URL"],
             use_container_width=True,
         )
+        st.link_button(
+            "📊 Live Results Portal",
+            "https://results.eci.gov.in/",
+            use_container_width=True,
+        )
+        st.divider()
+        st.markdown("#### 🆕 New Features")
+        st.markdown(
+            """
+            <div style="font-size:0.78rem;color:#C8C4BC;line-height:1.8;">
+            📊 Live Election Results<br>
+            👤 Candidate Profiles<br>
+            🗺️ India Election Map<br>
+            📈 Historical Trends<br>
+            📡 Exit Poll Aggregator<br>
+            🎯 Election Quiz<br>
+            🏛️ Share Polling Exp.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 # ── 6. MAIN DASHBOARD ─────────────────────────────────────────────────────────
@@ -557,6 +559,26 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
+    # ── Full tab layout (works with or without location) ──────────────────────
+    (
+        tab_guide, tab_map_booth, tab_reminders, tab_ai,
+        tab_results, tab_candidates, tab_india_map,
+        tab_trends, tab_polls, tab_quiz, tab_experience,
+    ) = st.tabs([
+        "📋 Voter Guide",
+        "🗺️ Booth Search",
+        "🔔 Notifications",
+        "🤖 AI Assistant",
+        "📊 Live Results",
+        "👤 Candidates",
+        "🗺️ India Map",
+        "📈 Trends",
+        "📡 Exit Polls",
+        "🎯 Quiz",
+        "🏛️ Share Experience",
+    ])
+
+    # ── Tabs that require location ─────────────────────────────────────────────
     if "election_data" in st.session_state:
         data    = st.session_state["election_data"]
         handler = st.session_state["handler"]
@@ -591,10 +613,6 @@ def main() -> None:
 
         st.divider()
 
-        tab_guide, tab_map, tab_reminders, tab_ai = st.tabs(
-            ["📋 Voter Guide", "🗺️ Booth Search", "🔔 Notifications", "🤖 AI Assistant"]
-        )
-
         with tab_guide:
             c1, c2 = st.columns([1.5, 1])
             with c1:
@@ -602,7 +620,7 @@ def main() -> None:
             with c2:
                 render_timeline(handler, data)
 
-        with tab_map:
+        with tab_map_booth:
             render_map_view(data, st.session_state["location"])
 
         with tab_reminders:
@@ -612,10 +630,33 @@ def main() -> None:
             render_ai_assistant(data)
 
     else:
-        st.info(
-            "👋 Welcome! Enter your location in the sidebar to load the 2026 Election Dashboard."
-        )
-        st.image("https://www.eci.gov.in/img/eci-logo.png", width=200)
+        # Show placeholder in location-required tabs
+        for tab in [tab_guide, tab_map_booth, tab_reminders, tab_ai]:
+            with tab:
+                st.info("👋 Enter your location in the sidebar to load your personalised election dashboard.")
+
+    # ── New feature tabs (no location required) ────────────────────────────────
+    with tab_results:
+        location = st.session_state.get("location", "West Bengal")
+        render_election_results(state=location if location else "West Bengal")
+
+    with tab_candidates:
+        render_candidate_profiles()
+
+    with tab_india_map:
+        render_india_map()
+
+    with tab_trends:
+        render_historical_trends()
+
+    with tab_polls:
+        render_exit_poll_aggregator()
+
+    with tab_quiz:
+        render_election_quiz()
+
+    with tab_experience:
+        render_polling_experience()
 
 
 if __name__ == "__main__":
