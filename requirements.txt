@@ -18,6 +18,7 @@ urllib3>=2.0.0
 # ── Utilities ─────────────────────────────────────────────────────────────────
 python-dateutil>=2.9.0
 pytz>=2024.1
+python-dotenv
 
 # ── Accessibility & i18n ──────────────────────────────────────────────────────
 # (Translate API handled via REST — no extra SDK required)
