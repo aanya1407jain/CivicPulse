@@ -128,13 +128,14 @@ def _render_seat_bar(parties: list[dict], total_seats: int, majority: int) -> No
     """Render a horizontal stacked seat bar."""
     bar_parts = ""
     for p in parties:
-        pct = ((p["won"] + p["leading"]) / total_seats) * 100
+        total = p["won"] + p["leading"]
+        pct = (total / total_seats) * 100
         if pct < 1:
             continue
         bar_parts += (
             f'<div style="width:{pct:.1f}%;background:{p["color"]};height:100%;'
             f'display:inline-block;transition:width 0.6s ease;" '
-            f'title="{p["name"]}: {p[\"won\"] + p[\"leading\"]} seats"></div>'
+            f'title="{p["name"]}: {total} seats"></div>'
         )
 
     majority_pct = (majority / total_seats) * 100
