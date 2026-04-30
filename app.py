@@ -71,38 +71,347 @@ def apply_india_theme() -> None:
     st.markdown(
         """
         <style>
-        .stApp { background-color: #FFFFFF !important; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@700;900&display=swap');
 
-        h2, h3, p, span { color: #000000 !important; }
+        /* ─── ROOT & GLOBAL ─────────────────────────────────── */
+        :root {
+            --saffron:      #FF6B00;
+            --saffron-lt:   #FFF3E8;
+            --saffron-md:   #FFD4A8;
+            --navy:         #1A1A2E;
+            --navy-lt:      #2D3561;
+            --green:        #138808;
+            --green-lt:     #E8F5E6;
+            --red:          #C62828;
+            --red-lt:       #FFEBEE;
+            --bg:           #FAFAF8;
+            --surface:      #FFFFFF;
+            --surface2:     #F5F3EF;
+            --border:       #E8E4DC;
+            --text-primary: #1A1A2E;
+            --text-secondary: #5C5C7A;
+            --text-muted:   #9090A8;
+            --shadow-sm:    0 1px 4px rgba(26,26,46,0.08);
+            --shadow-md:    0 4px 16px rgba(26,26,46,0.12);
+            --shadow-lg:    0 8px 32px rgba(26,26,46,0.15);
+            --radius-sm:    8px;
+            --radius-md:    14px;
+            --radius-lg:    20px;
+        }
 
-        .stMarkdown div p strong, .stMarkdown h4 {
-            color: #1a1a1a !important;
+        /* ─── APP SHELL ─────────────────────────────────────── */
+        .stApp {
+            background-color: var(--bg) !important;
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif !important;
+        }
+
+        /* ─── SIDEBAR ───────────────────────────────────────── */
+        [data-testid="stSidebar"] {
+            background: linear-gradient(160deg, #1A1A2E 0%, #2D3561 60%, #1A3A2E 100%) !important;
+            border-right: 1px solid rgba(255,255,255,0.08) !important;
+        }
+        [data-testid="stSidebar"] * {
+            color: #F0EDE8 !important;
+        }
+        [data-testid="stSidebar"] .stMarkdown p,
+        [data-testid="stSidebar"] .stMarkdown span,
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] .stCaption {
+            color: #C8C4BC !important;
+        }
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3,
+        [data-testid="stSidebar"] h4 {
+            color: #FFFFFF !important;
             font-weight: 700 !important;
         }
+        [data-testid="stSidebar"] .stTextInput input {
+            background: rgba(255,255,255,0.10) !important;
+            border: 1px solid rgba(255,255,255,0.20) !important;
+            color: #FFFFFF !important;
+            border-radius: var(--radius-sm) !important;
+        }
+        [data-testid="stSidebar"] .stTextInput input::placeholder {
+            color: rgba(255,255,255,0.45) !important;
+        }
+        [data-testid="stSidebar"] .stTextInput input:focus {
+            border-color: var(--saffron) !important;
+            box-shadow: 0 0 0 2px rgba(255,107,0,0.35) !important;
+        }
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+            color: #C8C4BC !important;
+        }
+        /* Sidebar success / warning alerts */
+        [data-testid="stSidebar"] .stAlert {
+            background: rgba(255,255,255,0.10) !important;
+            border: 1px solid rgba(255,255,255,0.18) !important;
+            border-radius: var(--radius-sm) !important;
+        }
+        [data-testid="stSidebar"] .stAlert p,
+        [data-testid="stSidebar"] .stAlert span {
+            color: #F0EDE8 !important;
+        }
+        [data-testid="stSidebar"] hr {
+            border-color: rgba(255,255,255,0.15) !important;
+        }
+        /* Sidebar link button */
+        [data-testid="stSidebar"] .stLinkButton a {
+            background: rgba(255,107,0,0.20) !important;
+            border: 1px solid rgba(255,107,0,0.40) !important;
+            color: #FFD4A8 !important;
+            border-radius: var(--radius-sm) !important;
+        }
+        [data-testid="stSidebar"] .stLinkButton a:hover {
+            background: rgba(255,107,0,0.35) !important;
+        }
 
+        /* ─── MAIN CONTENT TYPOGRAPHY ───────────────────────── */
+        .main .stMarkdown h1, .main .stMarkdown h2,
+        .main .stMarkdown h3, .main .stMarkdown h4 {
+            color: var(--text-primary) !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+        }
+        .main .stMarkdown p, .main .stMarkdown span,
+        .main .stMarkdown li {
+            color: var(--text-primary) !important;
+        }
+
+        /* ─── TABS ───────────────────────────────────────────── */
+        .stTabs [data-baseweb="tab-list"] {
+            background: var(--surface2) !important;
+            border-radius: var(--radius-md) !important;
+            padding: 4px !important;
+            gap: 4px !important;
+            border: 1px solid var(--border) !important;
+        }
+        .stTabs [data-baseweb="tab"] {
+            background: transparent !important;
+            border-radius: 10px !important;
+            color: var(--text-secondary) !important;
+            font-weight: 600 !important;
+            font-size: 0.85rem !important;
+            padding: 8px 18px !important;
+            transition: all 0.2s ease !important;
+        }
+        .stTabs [aria-selected="true"] {
+            background: var(--surface) !important;
+            color: var(--saffron) !important;
+            box-shadow: var(--shadow-sm) !important;
+        }
+        .stTabs [data-baseweb="tab-panel"] {
+            background: transparent !important;
+            padding-top: 1.5rem !important;
+        }
+
+        /* ─── METRIC CARDS ───────────────────────────────────── */
+        [data-testid="stMetric"] {
+            background: var(--surface) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: var(--radius-md) !important;
+            padding: 1.2rem !important;
+            box-shadow: var(--shadow-sm) !important;
+        }
+        [data-testid="stMetric"] label {
+            color: var(--text-muted) !important;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+        }
+        [data-testid="stMetric"] [data-testid="stMetricValue"] {
+            color: var(--text-primary) !important;
+            font-weight: 800 !important;
+        }
+
+        /* ─── ALERTS / INFO BOXES ───────────────────────────── */
+        .stAlert {
+            border-radius: var(--radius-md) !important;
+            border: none !important;
+        }
+        .stAlert[data-baseweb="notification"] {
+            background: var(--saffron-lt) !important;
+        }
+        div[data-testid="stInfo"] {
+            background: #EEF2FF !important;
+            border-left: 4px solid #4F6EF7 !important;
+            border-radius: var(--radius-sm) !important;
+            color: var(--navy) !important;
+        }
+        div[data-testid="stSuccess"] {
+            background: var(--green-lt) !important;
+            border-left: 4px solid var(--green) !important;
+            border-radius: var(--radius-sm) !important;
+            color: var(--navy) !important;
+        }
+        div[data-testid="stWarning"] {
+            background: #FFF8E1 !important;
+            border-left: 4px solid #F9A825 !important;
+            border-radius: var(--radius-sm) !important;
+            color: var(--navy) !important;
+        }
+        div[data-testid="stError"] {
+            background: var(--red-lt) !important;
+            border-left: 4px solid var(--red) !important;
+            border-radius: var(--radius-sm) !important;
+            color: var(--navy) !important;
+        }
+        /* Fix text inside alerts */
+        div[data-testid="stInfo"] p,
+        div[data-testid="stSuccess"] p,
+        div[data-testid="stWarning"] p,
+        div[data-testid="stError"] p {
+            color: var(--navy) !important;
+        }
+
+        /* ─── BUTTONS ────────────────────────────────────────── */
+        .stButton > button[kind="primary"] {
+            background: linear-gradient(135deg, var(--saffron) 0%, #FF8C00 100%) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: var(--radius-sm) !important;
+            font-weight: 700 !important;
+            box-shadow: 0 2px 8px rgba(255,107,0,0.35) !important;
+            transition: all 0.2s !important;
+        }
+        .stButton > button[kind="primary"]:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 16px rgba(255,107,0,0.45) !important;
+        }
+        .stLinkButton a {
+            background: var(--surface2) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text-primary) !important;
+            border-radius: var(--radius-sm) !important;
+            font-weight: 600 !important;
+            transition: all 0.2s !important;
+        }
+        .stLinkButton a:hover {
+            background: var(--saffron-lt) !important;
+            border-color: var(--saffron) !important;
+            color: var(--saffron) !important;
+        }
+
+        /* ─── PROGRESS BAR ───────────────────────────────────── */
+        .stProgress > div > div {
+            background: linear-gradient(90deg, var(--saffron) 0%, #FF8C00 100%) !important;
+            border-radius: 99px !important;
+        }
+        .stProgress > div {
+            background: var(--border) !important;
+            border-radius: 99px !important;
+        }
+
+        /* ─── INPUTS (main area) ─────────────────────────────── */
+        .main .stTextInput input {
+            background: var(--surface) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: var(--radius-sm) !important;
+            color: var(--text-primary) !important;
+        }
+        .main .stTextInput input:focus {
+            border-color: var(--saffron) !important;
+            box-shadow: 0 0 0 3px rgba(255,107,0,0.15) !important;
+        }
+
+        /* ─── DIVIDER ────────────────────────────────────────── */
+        hr {
+            border-color: var(--border) !important;
+            margin: 1.5rem 0 !important;
+        }
+
+        /* ─── EXPANDER ───────────────────────────────────────── */
+        .streamlit-expander {
+            background: var(--surface) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: var(--radius-md) !important;
+        }
+
+        /* ─── CHAT ───────────────────────────────────────────── */
+        [data-testid="stChatMessage"] {
+            background: var(--surface) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: var(--radius-md) !important;
+        }
+
+        /* ─── HERO HEADER ────────────────────────────────────── */
         .main-header {
-            background: linear-gradient(90deg, #FF9933 0%, #FFFFFF 50%, #138808 100%);
-            padding: 2.5rem; border-radius: 15px; border: 2px solid #ddd;
-            margin-bottom: 2rem; text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: linear-gradient(120deg, #FFF3E8 0%, #FFFFFF 45%, #E8F5E6 100%);
+            padding: 2.5rem 3rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            border-top: 5px solid var(--saffron);
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
         }
-        .main-header h1, .main-header p, .main-header b { color: #000080 !important; }
+        .main-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #FF6B00 33%, #FFFFFF 33%, #FFFFFF 66%, #138808 66%);
+        }
+        .main-header h1 {
+            color: var(--navy) !important;
+            font-family: 'Fraunces', Georgia, serif !important;
+            font-size: 2.2rem !important;
+            font-weight: 900 !important;
+            margin-bottom: 0.5rem !important;
+            letter-spacing: -0.02em !important;
+        }
+        .main-header p, .main-header b {
+            color: var(--text-secondary) !important;
+            font-size: 1rem !important;
+        }
+        .main-header b { color: var(--navy) !important; }
 
+        /* ─── LIVE TAG ───────────────────────────────────────── */
         .live-tag {
-            background-color: #d32f2f !important;
-            color: #ffffff !important;
-            padding: 8px 16px !important;
-            border-radius: 25px;
-            font-weight: bold !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            background: var(--red-lt) !important;
+            color: var(--red) !important;
+            padding: 6px 14px !important;
+            border-radius: 99px !important;
+            font-weight: 700 !important;
+            font-size: 0.8rem !important;
+            border: 1px solid rgba(198,40,40,0.25) !important;
+            letter-spacing: 0.04em !important;
         }
 
+        /* ─── STEP CARD ──────────────────────────────────────── */
         .step-card {
-            background-color: #f9f9f9 !important;
-            border-left: 6px solid #ff9933 !important;
-            color: #1a1a1a !important;
-            padding: 15px !important;
+            background: var(--surface) !important;
+            border-left: 5px solid var(--saffron) !important;
+            color: var(--text-primary) !important;
+            padding: 16px 20px !important;
             margin-bottom: 12px !important;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0 !important;
+            box-shadow: var(--shadow-sm) !important;
         }
+
+        /* ─── CHECKBOX LABEL ─────────────────────────────────── */
+        .stCheckbox label span {
+            color: var(--text-primary) !important;
+        }
+
+        /* ─── CODE BLOCK ─────────────────────────────────────── */
+        .stCode, code {
+            background: var(--surface2) !important;
+            color: var(--navy) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: var(--radius-sm) !important;
+        }
+
+        /* ─── SCROLLBAR ──────────────────────────────────────── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
         </style>
         """,
         unsafe_allow_html=True,
@@ -239,9 +548,22 @@ def main() -> None:
 
         col1, col2, col3 = st.columns([2, 1, 1])
         with col1:
-            st.subheader(f"Jurisdiction: {sanitize_text(data.get('jurisdiction', 'General'))}")
+            st.markdown(
+                f'<h3 style="margin:0;color:#1A1A2E;font-family:\'Plus Jakarta Sans\',sans-serif;">'
+                f'📍 {sanitize_text(data.get("jurisdiction", "General"))}</h3>',
+                unsafe_allow_html=True
+            )
         with col2:
-            st.markdown(f"Status: **{status}**")
+            status_color = {"Upcoming": "#2D3561", "Live": "#C62828", "Completed": "#0E6B06"}.get(
+                status.split()[0] if status else "", "#5C5C7A"
+            )
+            st.markdown(
+                f'<div style="background:{status_color}12;border:1px solid {status_color}30;'
+                f'border-radius:20px;padding:6px 14px;text-align:center;margin-top:4px;">'
+                f'<span style="color:{status_color};font-weight:700;font-size:0.85rem;">{status}</span>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
         with col3:
             st.markdown(
                 '<div style="text-align:right">'
