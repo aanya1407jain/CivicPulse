@@ -474,10 +474,27 @@ def _call_gemini(question: str, election_data: dict) -> str:
         )
         return response.text or "I could not generate a response. Please try again."
 
-    except Exception as exc:
-        logger.warning("Gemini call failed: %s", exc)
+    except ImportError:
         return (
-            "Sorry, the AI assistant is temporarily unavailable. "
+            "⚠️ **Missing package:** `google-generativeai` is not installed. "
+            "Add it to `requirements.txt` and restart."
+        )
+    except Exception as exc:
+        err = str(exc)
+        logger.error("Gemini call failed: %s", err)
+
+        if "API_KEY_INVALID" in err or "invalid" in err.lower():
+            return "⚠️ **Invalid API key.** Check that `GOOGLE_API_KEY` is set correctly in your HF Space secrets."
+        if "quota" in err.lower() or "429" in err:
+            return "⚠️ **Quota exceeded.** Your Gemini API free tier limit has been reached. Try again later."
+        if "not found" in err.lower() or "404" in err:
+            return "⚠️ **Model not found.** The Gemini model name may be incorrect or unavailable in your region."
+        if "permission" in err.lower() or "403" in err:
+            return "⚠️ **Permission denied.** Your API key may not have access to the Gemini API. Check Google AI Studio."
+
+        # Show actual error for any other unknown failure
+        return (
+            f"⚠️ **Gemini error:** {err}\n\n"
             f"For election queries, call the ECI helpline at **{INDIA['VOTER_HELPLINE']}**."
         )
 
