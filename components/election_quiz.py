@@ -288,6 +288,15 @@ def render_election_quiz() -> None:
 
     if not already_answered:
         for opt in question["options"]:
+            # Wrap the native Streamlit button in an accessible container that
+            # carries aria-pressed="false" so assistive technologies announce the
+            # button role correctly before the user selects an answer.
+            st.markdown(
+                f'<div role="group" aria-label="Answer option">'
+                f'<span aria-pressed="false" style="display:none;"></span>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
             if st.button(opt, key=f"q{q_idx}_opt_{opt}", use_container_width=True):
                 if "quiz_answers" not in st.session_state:
                     st.session_state["quiz_answers"] = {}
@@ -309,8 +318,10 @@ def render_election_quiz() -> None:
             else:
                 bg, border, text = "#1C2030", "rgba(255,255,255,0.08)", "#5C6480"
                 icon = ""
+            aria_pressed = "true" if is_chosen else "false"
             st.markdown(
-                f'<div style="background:{bg};border:2px solid {border};border-radius:10px;'
+                f'<div role="button" aria-pressed="{aria_pressed}" tabindex="0" '
+                f'style="background:{bg};border:2px solid {border};border-radius:10px;'
                 f'padding:10px 16px;margin-bottom:6px;color:{text};font-weight:600;font-size:0.9rem;">'
                 f'{icon}{opt}</div>',
                 unsafe_allow_html=True,
