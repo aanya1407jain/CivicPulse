@@ -3,6 +3,7 @@ CivicPulse — Candidate Profiles Component
 ==========================================
 Criminal records, assets, education pulled from ECI affidavits.
 Source: https://affidavit.eci.gov.in/ (publicly accessible data)
+Dark-theme version: all inline HTML uses dark palette.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ MOCK_CANDIDATES = [
     {
         "name": "Mamata Banerjee",
         "party": "AITC",
-        "party_color": "#00843D",
+        "party_color": "#27C96E",
         "constituency": "Bhawanipore",
         "age": 69,
         "education": "B.A., LL.B. (University of Calcutta)",
@@ -34,7 +35,7 @@ MOCK_CANDIDATES = [
     {
         "name": "Suvendu Adhikari",
         "party": "BJP",
-        "party_color": "#FF6600",
+        "party_color": "#FF6B1A",
         "constituency": "Nandigram",
         "age": 53,
         "education": "B.A. (Tamluk Hamilton College)",
@@ -55,7 +56,7 @@ MOCK_CANDIDATES = [
     {
         "name": "Firhad Hakim",
         "party": "AITC",
-        "party_color": "#00843D",
+        "party_color": "#27C96E",
         "constituency": "Kasba",
         "age": 62,
         "education": "B.Com (University of Calcutta)",
@@ -77,10 +78,10 @@ MOCK_CANDIDATES = [
 
 def _criminal_badge(count: int) -> str:
     if count == 0:
-        return '<span style="background:#E8F5E6;color:#0E6B06;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid #B8E0B4;">✅ No Cases</span>'
-    color = "#C62828" if count >= 3 else "#D95200"
-    bg = "#FFEBEE" if count >= 3 else "#FFF3E8"
-    border = "#FF8A80" if count >= 3 else "#FFD4A8"
+        return '<span style="background:rgba(39,201,110,0.12);color:#27C96E;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid rgba(39,201,110,0.3);">✅ No Cases</span>'
+    color  = "#F74F4F" if count >= 3 else "#FF6B1A"
+    bg     = "rgba(247,79,79,0.12)"  if count >= 3 else "rgba(255,107,26,0.12)"
+    border = "rgba(247,79,79,0.3)"   if count >= 3 else "rgba(255,107,26,0.3)"
     return f'<span style="background:{bg};color:{color};font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid {border};">⚠️ {count} Case{"s" if count > 1 else ""}</span>'
 
 
@@ -134,10 +135,10 @@ def render_candidate_profiles(constituency: str = "") -> None:
             with c1:
                 st.markdown(
                     f"""
-                    <div style="background:#F5F3EF;border-radius:12px;padding:16px;
-                                border-left:5px solid {cand['party_color']};">
+                    <div style="background:#1C2030;border-radius:12px;padding:16px;
+                                border-left:5px solid {cand['party_color']};border:1px solid rgba(255,255,255,0.08);border-left:5px solid {cand['party_color']};">
                         <div style="font-size:3rem;text-align:center;">{cand['image_placeholder']}</div>
-                        <div style="font-weight:800;font-size:1rem;color:#1A1A2E;text-align:center;margin-top:8px;">
+                        <div style="font-weight:800;font-size:1rem;color:#E8EAF0;text-align:center;margin-top:8px;">
                             {sanitize_text(cand['name'])}
                         </div>
                         <div style="text-align:center;margin-top:4px;">
@@ -146,10 +147,10 @@ def render_candidate_profiles(constituency: str = "") -> None:
                                 {cand['party']}
                             </span>
                         </div>
-                        <div style="color:#5C5C7A;font-size:0.8rem;text-align:center;margin-top:8px;">
+                        <div style="color:#9BA3BC;font-size:0.8rem;text-align:center;margin-top:8px;">
                             Age: {cand['age']} · {sanitize_text(cand['constituency'])}
                         </div>
-                        <div style="color:#5C5C7A;font-size:0.78rem;margin-top:8px;line-height:1.4;">
+                        <div style="color:#9BA3BC;font-size:0.78rem;margin-top:8px;line-height:1.4;">
                             {sanitize_text(cand['bio'])}
                         </div>
                     </div>
@@ -161,9 +162,9 @@ def render_candidate_profiles(constituency: str = "") -> None:
                 st.markdown("**📚 Education & Background**")
                 st.markdown(
                     f"""
-                    <div style="background:#EEF2FF;border-radius:10px;padding:12px 16px;
-                                margin-bottom:12px;border-left:4px solid #4F6EF7;">
-                        <div style="font-size:0.85rem;color:#1A1A2E;font-weight:600;">
+                    <div style="background:rgba(79,142,247,0.10);border-radius:10px;padding:12px 16px;
+                                margin-bottom:12px;border-left:4px solid #4F8EF7;">
+                        <div style="font-size:0.85rem;color:#E8EAF0;font-weight:600;">
                             🎓 {sanitize_text(cand['education'])}
                         </div>
                     </div>
@@ -173,13 +174,13 @@ def render_candidate_profiles(constituency: str = "") -> None:
                 st.markdown("**💰 Assets & Liabilities**")
                 st.markdown(
                     f"""
-                    <div style="background:#F0FAF0;border-radius:10px;padding:12px 16px;border-left:4px solid #0E6B06;">
-                        <div style="font-size:0.82rem;color:#1A1A2E;margin-bottom:4px;">
+                    <div style="background:rgba(39,201,110,0.10);border-radius:10px;padding:12px 16px;border-left:4px solid #27C96E;">
+                        <div style="font-size:0.82rem;color:#E8EAF0;margin-bottom:4px;">
                             Total: <b>{cand['assets_total']}</b>
                         </div>
-                        <div style="font-size:0.78rem;color:#5C5C7A;">Movable: {cand['assets_movable']}</div>
-                        <div style="font-size:0.78rem;color:#5C5C7A;">Immovable: {cand['assets_immovable']}</div>
-                        <div style="font-size:0.78rem;color:#C62828;margin-top:4px;">Liabilities: {cand['liabilities']}</div>
+                        <div style="font-size:0.78rem;color:#9BA3BC;">Movable: {cand['assets_movable']}</div>
+                        <div style="font-size:0.78rem;color:#9BA3BC;">Immovable: {cand['assets_immovable']}</div>
+                        <div style="font-size:0.78rem;color:#F74F4F;margin-top:4px;">Liabilities: {cand['liabilities']}</div>
                     </div>
                     """,
                     unsafe_allow_html=True,
@@ -189,13 +190,13 @@ def render_candidate_profiles(constituency: str = "") -> None:
                 st.markdown("**⚖️ Criminal Record**")
                 st.markdown(
                     f"""
-                    <div style="background:#FAFAF8;border-radius:10px;padding:12px 16px;
-                                border:1px solid #E8E4DC;margin-bottom:12px;">
+                    <div style="background:#1C2030;border-radius:10px;padding:12px 16px;
+                                border:1px solid rgba(255,255,255,0.08);margin-bottom:12px;">
                         <div style="margin-bottom:8px;">{_criminal_badge(cand['criminal_cases'])}</div>
                         {''.join([
-                            f'<div style="font-size:0.78rem;margin-top:6px;padding:6px 10px;background:#FFF3E8;border-radius:8px;border-left:3px solid #D95200;">'
-                            f'<b>{sanitize_text(d["ipc"])}</b><br>'
-                            f'<span style="color:#5C5C7A;">{sanitize_text(d["description"])} · {sanitize_text(d["status"])}</span>'
+                            f'<div style="font-size:0.78rem;margin-top:6px;padding:6px 10px;background:rgba(255,107,26,0.10);border-radius:8px;border-left:3px solid #FF6B1A;">'
+                            f'<b style="color:#E8EAF0;">{sanitize_text(d["ipc"])}</b><br>'
+                            f'<span style="color:#9BA3BC;">{sanitize_text(d["description"])} · {sanitize_text(d["status"])}</span>'
                             f'</div>'
                             for d in cand.get('criminal_details', [])
                         ])}
