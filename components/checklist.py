@@ -12,6 +12,7 @@ from config.settings import INDIA
 from regions.base import BaseRegionHandler, ElectionStep
 from services.calendar_service import CalendarService
 from utils.location_utils import sanitize_text
+from components.language_selector import T
 
 
 def render_checklist(handler: BaseRegionHandler, election_data: dict) -> None:
