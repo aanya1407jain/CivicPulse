@@ -533,11 +533,11 @@ def render_india_map() -> None:
             rc = data["ruling_color"]
             is_no_asm = data["status"] == "no_assembly"
 
-            # 1. Build the HTML pieces conditionally
+            # 1. Build the HTML pieces
             party_html = (
                 f'''<div style="margin:8px 0 4px;">
-                    <span style="background:{rc}22;color:{rc};font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid {rc}33;">
-                    {sanitize_text(data["ruling_party"])}</span></div>'''
+<span style="background:{rc}22;color:{rc};font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid {rc}33;">
+{sanitize_text(data["ruling_party"])}</span></div>'''
                 if not is_no_asm else ""
             )
 
@@ -546,25 +546,19 @@ def render_india_map() -> None:
                 if not is_no_asm else ""
             )
 
-            # 2. Assemble everything into ONE single string
-            card_html = f"""
-            <div style="background:#1C2030;border-radius:12px;padding:14px;
-                        border:1px solid rgba(255,255,255,0.07);border-left:5px solid {rc};
-                        margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.3);
-                        min-height: {'90px' if is_no_asm else '130px'};">
-                <div style="font-weight:700;color:#E8EAF0;font-size:0.9rem;">{sanitize_text(state)}</div>
-                <div style="font-size:0.72rem;color:#5C6480;margin-top:2px;">{sanitize_text(data['type'])} · {sanitize_text(data['capital'])}</div>
-                {party_html}
-                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;">
-                    <span style="background:{sc}22;color:{sc};font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid {sc}44;">
-                    {sl}</span>
-                    <span style="font-size:0.68rem;color:#5C6480;">{data["total_seats"]} seats</span>
-                </div>
-                {next_html}
-            </div>
-            """
+            # 2. Assemble everything into ONE string with NO indentation
+            card_html = f"""<div style="background:#1C2030;border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.07);border-left:5px solid {rc};margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.3);min-height:{'90px' if is_no_asm else '130px'};">
+<div style="font-weight:700;color:#E8EAF0;font-size:0.9rem;">{sanitize_text(state)}</div>
+<div style="font-size:0.72rem;color:#5C6480;margin-top:2px;">{sanitize_text(data['type'])} · {sanitize_text(data['capital'])}</div>
+{party_html}
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;">
+<span style="background:{sc}22;color:{sc};font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid {sc}44;">{sl}</span>
+<span style="font-size:0.68rem;color:#5C6480;">{data["total_seats"]} seats</span>
+</div>
+{next_html}
+</div>"""
 
-            # 3. Render the entire card in one go
+            # 3. Render
             st.markdown(card_html, unsafe_allow_html=True)
             
     st.divider()
