@@ -3,11 +3,7 @@ CivicPulse — India-Centric Map View Component
 =============================================
 Localized for Indian polling infrastructure (Schools/Community Halls)
 and official ECI Portal integration.
-
-Accessibility fixes:
-- No <a><button> nesting (invalid HTML / WCAG failure)
-- ARIA labels on interactive elements
-- Colour contrast safe inline styles
+Dark-theme version: all inline HTML uses dark palette.
 """
 
 from __future__ import annotations
@@ -31,15 +27,14 @@ def render_map_view(election_data: dict, user_location: str) -> None:
             "Voter ID (EPIC) record. Use the official ECI portal below to confirm your booth."
         )
 
-        # Official ECI portal card (uses st.link_button — no unsafe HTML needed)
         st.markdown(
             """
             <div role="region" aria-label="Official ECI booth search"
-                 style="background:#FFF3E8;padding:20px;border-radius:14px;
-                        border:1px solid #FFD4A8;border-left:6px solid #FF6B00;
-                        margin-bottom:20px;box-shadow:0 2px 8px rgba(255,107,0,0.10);">
-                <h4 style="color:#D95200;margin-top:0;">📍 Official ECI Booth Search</h4>
-                <p style="font-size:0.9rem;color:#5C5C7A;">
+                 style="background:rgba(255,107,26,0.10);padding:20px;border-radius:14px;
+                        border:1px solid rgba(255,107,26,0.25);border-left:6px solid #FF6B1A;
+                        margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+                <h4 style="color:#FF6B1A;margin-top:0;">📍 Official ECI Booth Search</h4>
+                <p style="font-size:0.9rem;color:#9BA3BC;">
                     Find your exact Part Number and Room Number using your EPIC number or name.
                 </p>
             </div>
@@ -108,13 +103,13 @@ def render_map_view(election_data: dict, user_location: str) -> None:
             st.markdown(
                 f"""
                 <div role="listitem"
-                     style="background:#FFFFFF;
-                            border:1px solid #E8E4DC;border-radius:12px;
+                     style="background:#1C2030;
+                            border:1px solid rgba(255,255,255,0.08);border-radius:12px;
                             padding:1rem 1.2rem;margin-bottom:0.5rem;
-                            box-shadow:0 1px 4px rgba(26,26,46,0.07);">
-                    <div style="font-weight:700;color:#138808;font-size:0.95rem;">🏛️ {safe_name}</div>
-                    <div style="font-size:0.85rem;color:#5C5C7A;margin-top:2px;">{safe_address}</div>
-                    {"<div style='margin-top:6px;'><span style='font-size:0.75rem;background:#E8F5E6;color:#0E6B06;padding:3px 10px;border-radius:20px;font-weight:600;border:1px solid #B8E0B4;'>♿ Wheelchair Accessible</span></div>" if station['accessible'] else ""}
+                            box-shadow:0 1px 4px rgba(0,0,0,0.3);">
+                    <div style="font-weight:700;color:#27C96E;font-size:0.95rem;">🏛️ {safe_name}</div>
+                    <div style="font-size:0.85rem;color:#9BA3BC;margin-top:2px;">{safe_address}</div>
+                    {"<div style='margin-top:6px;'><span style='font-size:0.75rem;background:rgba(39,201,110,0.12);color:#27C96E;padding:3px 10px;border-radius:20px;font-weight:600;border:1px solid rgba(39,201,110,0.3);'>♿ Wheelchair Accessible</span></div>" if station['accessible'] else ""}
                 </div>
                 """,
                 unsafe_allow_html=True,
