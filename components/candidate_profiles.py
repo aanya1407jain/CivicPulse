@@ -9,7 +9,7 @@ Dark-theme version: all inline HTML uses dark palette.
 from __future__ import annotations
 import streamlit as st
 from utils.location_utils import sanitize_text
-
+from components.language_selector import T
 ECI_AFFIDAVIT_URL = "https://affidavit.eci.gov.in/"
 
 # ── Mock candidate data (replace with real affidavit scraper) ──────────────────
