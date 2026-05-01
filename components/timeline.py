@@ -59,9 +59,9 @@ def render_timeline(handler: BaseRegionHandler, election_data: dict) -> None:
             f'<div style="font-size:4rem;font-weight:900;color:{text_color};'
             f'line-height:1;font-family:\'Fraunces\',Georgia,serif;">'
             f"{abs(days)}</div>"
-            f'<div style="font-size:0.9rem;color:#5C5C7A;margin-top:0.5rem;font-weight:500;">'
+            f'<div style="font-size:0.9rem;color:#9BA3BC;margin-top:0.5rem;font-weight:500;">'
             f'days {"since" if days < 0 else "until"} {election_name}</div>'
-            f'<div style="font-size:0.8rem;color:#9090A8;margin-top:0.4rem;">'
+            f'<div style="font-size:0.8rem;color:#5C6480;margin-top:0.4rem;">'
             f"Target Date: {sanitize_text(format_date_locale(next_election))}</div>"
             f"</div>",
             unsafe_allow_html=True,
@@ -79,16 +79,16 @@ def render_timeline(handler: BaseRegionHandler, election_data: dict) -> None:
             )
 
             if d is not None and d < 0:
-                status_icon, s_color, bg_color, status_text = "✅", "#0E6B06", "#F0FAF0", "Completed"
+                status_icon, s_color, bg_color, status_text = "✅", "#27C96E", "rgba(39,201,110,0.10)", "Completed"
             elif d == 0:
                 status_icon, s_color, bg_color, status_text = "🔴", "#C62828", "#FFEBEE", "TODAY"
             elif "Phase" in str(date_str):
-                status_icon, s_color, bg_color, status_text = "📍", "#2D3561", "#EEF1FF", "Zonal"
+                status_icon, s_color, bg_color, status_text = "📍", "#4F8EF7", "rgba(79,142,247,0.10)", "Zonal"
             else:
                 status_icon, s_color, bg_color, status_text = (
                     "⏳",
                     "#D95200",
-                    "#FFF3E8",
+                    "rgba(255,107,26,0.10)",
                     f"{d} days" if d is not None else "Planned",
                 )
 
@@ -102,8 +102,8 @@ def render_timeline(handler: BaseRegionHandler, election_data: dict) -> None:
                 f'border-left:4px solid {s_color};box-shadow:0 1px 3px rgba(26,26,46,0.06);">'
                 f'<span aria-hidden="true" style="font-size:1.1rem;">{status_icon}</span>'
                 f"<div style=\"flex:1;\">"
-                f'<div style="font-weight:600;font-size:0.9rem;color:#1A1A2E;">{safe_label}</div>'
-                f'<div style="color:#5C5C7A;font-size:0.8rem;">{safe_date_str}</div>'
+                f'<div style="font-weight:600;font-size:0.9rem;color:#E8EAF0;">{safe_label}</div>'
+                f'<div style="color:#9BA3BC;font-size:0.8rem;">{safe_date_str}</div>'
                 f"</div>"
                 f'<div style="color:{s_color};font-weight:700;font-size:0.85rem;'
                 f'background:{s_color}18;padding:3px 10px;border-radius:20px;'
@@ -125,13 +125,13 @@ def render_timeline(handler: BaseRegionHandler, election_data: dict) -> None:
                 safe_method_desc = sanitize_text(method.get("description", ""))
                 st.markdown(
                     f'<div role="listitem" aria-label="{safe_method_name}"'
-                    f' style="background:#F0FAF0;border:1px solid #B8E0B4;'
+                    f' style="background:rgba(39,201,110,0.10);border:1px solid rgba(39,201,110,0.3);'
                     f'border-radius:12px;padding:1rem;text-align:center;min-height:140px;'
                     f'box-shadow:0 1px 4px rgba(19,136,8,0.08);">'
                     f'<div aria-hidden="true" style="font-size:2rem;">{method.get("icon","")}</div>'
                     f'<div style="font-weight:700;font-size:0.85rem;margin:0.4rem 0;color:#0E6B06;">'
                     f"{safe_method_name}</div>"
-                    f'<div style="color:#5C5C7A;font-size:0.75rem;">{safe_method_desc}</div>'
+                    f'<div style="color:#9BA3BC;font-size:0.75rem;">{safe_method_desc}</div>'
                     f"</div>",
                     unsafe_allow_html=True,
                 )
