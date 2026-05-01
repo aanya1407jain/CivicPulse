@@ -9,7 +9,7 @@ from __future__ import annotations
 import streamlit as st
 from datetime import datetime
 from utils.location_utils import sanitize_text
-
+from components.language_selector import T
 
 def _init_reports() -> None:
     """Seed session state with sample reports on first load."""
