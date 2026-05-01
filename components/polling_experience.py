@@ -161,7 +161,7 @@ def render_polling_experience() -> None:
         all_reports.sort(key=lambda r: r["queue_minutes"])
 
     for report in all_reports:
-        exp_color = OVERALL_COLORS.get(report["overall"], "#5C5C7A")
+        exp_color = OVERALL_COLORS.get(report["overall"], "#9BA3BC")
         acc_badge = (
             '<span style="background:#E8F5E6;color:#0E6B06;font-size:0.68rem;font-weight:700;'
             'padding:2px 8px;border-radius:20px;border:1px solid #B8E0B4;">♿ Accessible</span>'
@@ -178,15 +178,15 @@ def render_polling_experience() -> None:
 
         st.markdown(
             f"""
-            <div style="background:#FFFFFF;border-radius:14px;padding:16px;
+            <div style="background:#1C2030;border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,0.08);
                         border:1px solid #E8E4DC;border-left:5px solid {exp_color};
                         margin-bottom:12px;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
                 <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
                     <div style="flex:1;">
-                        <div style="font-weight:700;color:#1A1A2E;font-size:0.95rem;">
+                        <div style="font-weight:700;color:#E8EAF0;font-size:0.95rem;">
                             🏛️ {report['booth']}
                         </div>
-                        <div style="font-size:0.75rem;color:#9090A8;margin-top:2px;">
+                        <div style="font-size:0.75rem;color:#5C6480;margin-top:2px;">
                             {report['user']} · {report['timestamp']}
                         </div>
                     </div>
@@ -204,7 +204,7 @@ def render_polling_experience() -> None:
                     </span>
                     {acc_badge}
                 </div>
-                {f'<div style="font-size:0.82rem;color:#5C5C7A;font-style:italic;padding:8px 12px;background:#F5F3EF;border-radius:8px;">{report["notes"]}</div>' if report.get("notes") else ''}
+                {f'<div style="font-size:0.82rem;color:#9BA3BC;font-style:italic;padding:8px 12px;background:#242840;border-radius:8px;">{report["notes"]}</div>' if report.get("notes") else ''}
             </div>
             """,
             unsafe_allow_html=True,
