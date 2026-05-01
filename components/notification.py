@@ -17,7 +17,7 @@ from regions.base import BaseRegionHandler
 from services.calendar_service import CalendarService
 from utils.location_utils import sanitize_text
 from utils.validators import validate_phone
-
+from components.language_selector import T
 
 def render_notification_panel(
     election_data: dict, handler: BaseRegionHandler | None
