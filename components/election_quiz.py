@@ -8,6 +8,7 @@ Dark-theme version: all inline HTML uses dark palette variables.
 from __future__ import annotations
 import streamlit as st
 import random
+from components.language_selector import T
 
 QUIZ_QUESTIONS = [
     {
