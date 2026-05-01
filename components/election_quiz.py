@@ -2,6 +2,7 @@
 CivicPulse — Election Quiz Component
 =====================================
 Gamified "How much do you know about Indian elections?" awareness quiz.
+Dark-theme version: all inline HTML uses dark palette variables.
 """
 
 from __future__ import annotations
@@ -107,13 +108,13 @@ QUIZ_QUESTIONS = [
 ]
 
 CATEGORY_COLORS = {
-    "Constitution": "#4F6EF7",
-    "Voting Process": "#00843D",
-    "Documents": "#D95200",
-    "Parliament": "#2D3561",
-    "Rules": "#C62828",
-    "State Elections": "#9C27B0",
-    "Resources": "#0097A7",
+    "Constitution":    "#4F8EF7",
+    "Voting Process":  "#27C96E",
+    "Documents":       "#FF6B1A",
+    "Parliament":      "#9BA3BC",
+    "Rules":           "#F74F4F",
+    "State Elections": "#C084FC",
+    "Resources":       "#22D3EE",
 }
 
 
@@ -143,17 +144,17 @@ def render_election_quiz() -> None:
     if not st.session_state.get("quiz_started"):
         st.markdown(
             """
-            <div style="background:linear-gradient(135deg,#EEF2FF,#FFFFFF);
+            <div style="background:linear-gradient(135deg,#1C2030,#141720);
                         border-radius:16px;padding:28px;text-align:center;
-                        border:1px solid #C5D0FF;box-shadow:0 4px 16px rgba(79,110,247,0.10);">
+                        border:1px solid rgba(79,142,247,0.25);box-shadow:0 4px 16px rgba(0,0,0,0.4);">
                 <div style="font-size:3rem;margin-bottom:8px;">🗳️</div>
-                <div style="font-weight:800;font-size:1.3rem;color:#1A1A2E;margin-bottom:8px;">
+                <div style="font-weight:800;font-size:1.3rem;color:#E8EAF0;margin-bottom:8px;">
                     How well do you know Indian Elections?
                 </div>
-                <div style="color:#5C5C7A;font-size:0.9rem;margin-bottom:16px;">
+                <div style="color:#9BA3BC;font-size:0.9rem;margin-bottom:16px;">
                     7 questions · Multiple choice · Learn as you go
                 </div>
-                <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:0.8rem;color:#9090A8;">
+                <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:0.8rem;color:#5C6480;">
                     <span>📜 Constitution</span>
                     <span>🗳️ Voting Process</span>
                     <span>🏛️ Parliament</span>
@@ -175,21 +176,21 @@ def render_election_quiz() -> None:
         pct    = (score / total) * 100 if total else 0
 
         if pct >= 80:
-            emoji, label, color = "🏆", "Election Expert!", "#0E6B06"
+            emoji, label, color = "🏆", "Election Expert!", "#27C96E"
         elif pct >= 50:
-            emoji, label, color = "📚", "Good Citizen!", "#D95200"
+            emoji, label, color = "📚", "Good Citizen!", "#FF6B1A"
         else:
-            emoji, label, color = "🌱", "Keep Learning!", "#4F6EF7"
+            emoji, label, color = "🌱", "Keep Learning!", "#4F8EF7"
 
         st.markdown(
             f"""
-            <div style="background:linear-gradient(135deg,{color}0D,#FFFFFF);
+            <div style="background:linear-gradient(135deg,{color}18,#141720);
                         border-radius:16px;padding:28px;text-align:center;
-                        border:2px solid {color}44;box-shadow:0 4px 16px {color}20;">
+                        border:2px solid {color}44;box-shadow:0 4px 24px {color}22;">
                 <div style="font-size:4rem;">{emoji}</div>
                 <div style="font-weight:900;font-size:1.5rem;color:{color};margin:8px 0;">{label}</div>
-                <div style="font-size:3rem;font-weight:800;color:#1A1A2E;">{score}/{total}</div>
-                <div style="color:#5C5C7A;font-size:0.9rem;margin-top:4px;">{pct:.0f}% correct</div>
+                <div style="font-size:3rem;font-weight:800;color:#E8EAF0;">{score}/{total}</div>
+                <div style="color:#9BA3BC;font-size:0.9rem;margin-top:4px;">{pct:.0f}% correct</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -203,31 +204,32 @@ def render_election_quiz() -> None:
             q   = QUIZ_QUESTIONS[idx]
             ans = answers.get(idx)
             is_correct = ans == q["answer"]
-            bg    = "#F0FAF0" if is_correct else "#FFEBEE"
-            color = "#0E6B06" if is_correct else "#C62828"
+            bg    = "rgba(39,201,110,0.10)"  if is_correct else "rgba(247,79,79,0.10)"
+            color = "#27C96E" if is_correct else "#F74F4F"
+            border_color = "#27C96E" if is_correct else "#F74F4F"
             icon  = "✅" if is_correct else "❌"
-            cat_color = CATEGORY_COLORS.get(q["category"], "#999")
+            cat_color = CATEGORY_COLORS.get(q["category"], "#9BA3BC")
             st.markdown(
                 f"""
                 <div style="background:{bg};border-radius:12px;padding:14px;
-                            border-left:4px solid {color};margin-bottom:10px;">
+                            border-left:4px solid {border_color};margin-bottom:10px;">
                     <div style="display:flex;gap:8px;align-items:flex-start;">
                         <span style="font-size:1.1rem;">{icon}</span>
                         <div style="flex:1;">
-                            <div style="font-weight:700;color:#1A1A2E;font-size:0.88rem;margin-bottom:4px;">
+                            <div style="font-weight:700;color:#E8EAF0;font-size:0.88rem;margin-bottom:4px;">
                                 {q['q']}
                             </div>
-                            <div style="font-size:0.78rem;margin-bottom:4px;">
+                            <div style="font-size:0.78rem;margin-bottom:4px;color:#9BA3BC;">
                                 Your answer: <b style="color:{color};">{ans if ans else "Not answered"}</b><br>
-                                Correct: <b style="color:#0E6B06;">{q['answer']}</b>
+                                Correct: <b style="color:#27C96E;">{q['answer']}</b>
                             </div>
-                            <div style="font-size:0.75rem;color:#5C5C7A;font-style:italic;">
+                            <div style="font-size:0.75rem;color:#5C6480;font-style:italic;">
                                 💡 {q['explanation']}
                             </div>
                         </div>
-                        <span style="background:{cat_color}18;color:{cat_color};
+                        <span style="background:{cat_color}22;color:{cat_color};
                                      font-size:0.65rem;font-weight:700;padding:2px 8px;
-                                     border-radius:20px;white-space:nowrap;">
+                                     border-radius:20px;white-space:nowrap;border:1px solid {cat_color}44;">
                             {q['category']}
                         </span>
                     </div>
@@ -258,22 +260,22 @@ def render_election_quiz() -> None:
     # Progress bar
     st.progress(progress, text=f"Question {current + 1} of {total_qs}")
 
-    cat_color = CATEGORY_COLORS.get(question["category"], "#999")
+    cat_color = CATEGORY_COLORS.get(question["category"], "#9BA3BC")
     st.markdown(
         f"""
-        <div style="background:#FAFAF8;border-radius:16px;padding:20px;
-                    border:1px solid #E8E4DC;border-top:4px solid {cat_color};
-                    margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+        <div style="background:#1C2030;border-radius:16px;padding:20px;
+                    border:1px solid rgba(255,255,255,0.08);border-top:4px solid {cat_color};
+                    margin-bottom:1rem;box-shadow:0 2px 12px rgba(0,0,0,0.3);">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-                <span style="background:{cat_color}18;color:{cat_color};font-size:0.72rem;
-                             font-weight:700;padding:3px 10px;border-radius:20px;">
+                <span style="background:{cat_color}22;color:{cat_color};font-size:0.72rem;
+                             font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid {cat_color}44;">
                     {question['category']}
                 </span>
-                <span style="color:#9090A8;font-size:0.78rem;">
+                <span style="color:#5C6480;font-size:0.78rem;">
                     Score: {st.session_state.get('quiz_score', 0)}/{current}
                 </span>
             </div>
-            <div style="font-weight:700;font-size:1.05rem;color:#1A1A2E;line-height:1.5;">
+            <div style="font-weight:700;font-size:1.05rem;color:#E8EAF0;line-height:1.5;">
                 {question['q']}
             </div>
         </div>
@@ -299,13 +301,13 @@ def render_election_quiz() -> None:
             is_correct = opt == question["answer"]
             is_chosen  = opt == chosen
             if is_correct:
-                bg, border, text = "#E8F5E6", "#0E6B06", "#0E6B06"
+                bg, border, text = "rgba(39,201,110,0.12)", "#27C96E", "#27C96E"
                 icon = "✅ "
             elif is_chosen:
-                bg, border, text = "#FFEBEE", "#C62828", "#C62828"
+                bg, border, text = "rgba(247,79,79,0.12)", "#F74F4F", "#F74F4F"
                 icon = "❌ "
             else:
-                bg, border, text = "#F5F3EF", "#E8E4DC", "#9090A8"
+                bg, border, text = "#1C2030", "rgba(255,255,255,0.08)", "#5C6480"
                 icon = ""
             st.markdown(
                 f'<div style="background:{bg};border:2px solid {border};border-radius:10px;'
@@ -315,9 +317,9 @@ def render_election_quiz() -> None:
             )
 
         st.markdown(
-            f'<div style="background:#EEF2FF;border-radius:10px;padding:12px;font-size:0.82rem;'
-            f'color:#2D3561;border-left:4px solid #4F6EF7;margin-top:8px;">'
-            f'💡 <b>Explanation:</b> {question["explanation"]}</div>',
+            f'<div style="background:rgba(79,142,247,0.10);border-radius:10px;padding:12px;font-size:0.82rem;'
+            f'color:#9BA3BC;border-left:4px solid #4F8EF7;margin-top:8px;">'
+            f'💡 <b style="color:#E8EAF0;">Explanation:</b> {question["explanation"]}</div>',
             unsafe_allow_html=True,
         )
 
