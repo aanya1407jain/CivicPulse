@@ -6,6 +6,7 @@ Win/loss patterns by party, swing analysis, margin charts using Plotly.
 
 from __future__ import annotations
 import streamlit as st
+from components.language_selector import T
 
 try:
     import plotly.graph_objects as go
