@@ -6,6 +6,7 @@ Collects and averages multiple exit poll predictions.
 
 from __future__ import annotations
 import streamlit as st
+from components.language_selector import T
 
 # ── Sample exit polls ──────────────────────────────────────────────────────────
 DEFAULT_EXIT_POLLS = [
