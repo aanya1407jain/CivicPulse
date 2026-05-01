@@ -2,11 +2,7 @@
 CivicPulse — India-Centric Voter Checklist Component
 ====================================================
 Localized with Indian theme colors and ECI-specific priority handling.
-
-Accessibility fixes:
-- <a><button> nesting replaced with st.link_button
-- ARIA labels on interactive elements
-- Colour-safe text (no #aaa on white)
+Dark-theme version: all inline HTML uses dark palette.
 """
 
 from __future__ import annotations
@@ -21,7 +17,6 @@ from utils.location_utils import sanitize_text
 def render_checklist(handler: BaseRegionHandler, election_data: dict) -> None:
     """Render the interactive voter checklist with progress tracking."""
 
-    # Self-healing session initialisation
     if "checklist" not in st.session_state:
         st.session_state["checklist"] = {}
 
@@ -67,16 +62,15 @@ def render_checklist(handler: BaseRegionHandler, election_data: dict) -> None:
         for step in optional:
             _render_step(step, calendar_svc)
 
-    # Registration quick-link (no unsafe HTML needed)
     reg_url = election_data.get("registration_url", INDIA["VOTER_PORTAL_URL"])
     st.markdown(
         """
         <div role="region" aria-label="Voter registration"
-             style="background:#FFF3E8;padding:16px 20px;border-radius:12px;
-                    border-left:5px solid #FF6B00;margin-top:20px;
-                    box-shadow:0 1px 4px rgba(255,107,0,0.12);">
-            <strong style="color:#1A1A2E;">🗳️ Need to Register or Update?</strong><br>
-            <span style="font-size:0.9rem;color:#5C5C7A;display:block;margin-top:4px;">
+             style="background:rgba(255,107,26,0.10);padding:16px 20px;border-radius:12px;
+                    border-left:5px solid #FF6B1A;margin-top:20px;
+                    border:1px solid rgba(255,107,26,0.2);border-left:5px solid #FF6B1A;">
+            <strong style="color:#E8EAF0;">🗳️ Need to Register or Update?</strong><br>
+            <span style="font-size:0.9rem;color:#9BA3BC;display:block;margin-top:4px;">
                 Use Form 6 for new registration or Form 8 for address changes.
             </span>
         </div>
@@ -87,19 +81,19 @@ def render_checklist(handler: BaseRegionHandler, election_data: dict) -> None:
 
 
 def _render_step(step: ElectionStep, calendar_svc: CalendarService) -> None:
-    """Render a single checklist item with accessible markup."""
+    """Render a single checklist item with accessible dark-theme markup."""
 
-    # Layer 2 safety check
     if "checklist" not in st.session_state:
         st.session_state["checklist"] = {}
 
     is_done = st.session_state["checklist"].get(step.id, False)
 
+    # Dark-palette priority colors (accent/highlight tones)
     priority_color = {
-        "urgent":   "#D95200",   # deep saffron — readable on light bg
-        "normal":   "#2D3561",   # navy blue
-        "optional": "#0E6B06",   # deep green
-    }.get(step.priority, "#444444")
+        "urgent":   "#FF6B1A",   # orange
+        "normal":   "#4F8EF7",   # blue
+        "optional": "#27C96E",   # green
+    }.get(step.priority, "#9BA3BC")
 
     col1, col2, col3 = st.columns([0.08, 0.70, 0.22])
 
@@ -117,30 +111,31 @@ def _render_step(step: ElectionStep, calendar_svc: CalendarService) -> None:
 
     with col2:
         title_style = (
-            "text-decoration:line-through;color:#666;opacity:0.7;"
+            "text-decoration:line-through;color:#5C6480;opacity:0.7;"
             if checked
             else f"color:{priority_color};font-weight:700;"
         )
         deadline_html = (
-            f'<span style="font-size:0.75rem;color:#c62828;font-weight:bold;">'
+            f'<span style="font-size:0.75rem;color:#F74F4F;font-weight:bold;">'
             f"⏰ {sanitize_text(step.deadline)}</span>"
             if step.deadline
             else ""
         )
 
+        # Dark semi-transparent backgrounds keyed to priority
         bg_colors = {
-            "urgent":   "#FFF3E8",
-            "normal":   "#EEF1FF",
-            "optional": "#F0FAF0",
+            "urgent":   "rgba(255,107,26,0.10)",
+            "normal":   "rgba(79,142,247,0.10)",
+            "optional": "rgba(39,201,110,0.10)",
         }
-        card_bg = bg_colors.get(step.priority, "#FAFAF8")
+        card_bg = bg_colors.get(step.priority, "#1C2030")
         st.markdown(
             f'<div role="listitem" aria-label="{safe_title}" '
             f'style="border-left:5px solid {priority_color};background:{card_bg};'
             f'padding:12px 16px;border-radius:0 10px 10px 0;margin-bottom:6px;'
-            f'box-shadow:0 1px 4px rgba(26,26,46,0.07);">'
+            f'box-shadow:0 1px 4px rgba(0,0,0,0.3);">'
             f'<div style="{title_style}">{safe_title}</div>'
-            f'<div style="color:#5C5C7A;font-size:0.85rem;margin-top:3px;">{safe_desc}</div>'
+            f'<div style="color:#9BA3BC;font-size:0.85rem;margin-top:3px;">{safe_desc}</div>'
             f'<div style="margin-top:6px;">{deadline_html}</div>'
             f"</div>",
             unsafe_allow_html=True,
@@ -168,6 +163,6 @@ def _render_step(step: ElectionStep, calendar_svc: CalendarService) -> None:
         elif checked:
             st.markdown(
                 '<div role="img" aria-label="Step completed" '
-                'style="text-align:center;color:#138808;font-size:1.2rem;margin-top:5px;">✅</div>',
+                'style="text-align:center;color:#27C96E;font-size:1.2rem;margin-top:5px;">✅</div>',
                 unsafe_allow_html=True,
             )
