@@ -8,6 +8,7 @@ Dark-theme version: all inline HTML uses dark palette.
 from __future__ import annotations
 import streamlit as st
 from utils.location_utils import sanitize_text
+from components.language_selector import T
 
 ALL_INDIA_DATA = {
     "West Bengal": {
