@@ -63,7 +63,7 @@ def _mini_bar(aitc: int, bjp: int, others: int, total: int = 294) -> str:
     oth_w   = (others / total) * 100
     maj_pct = (MAJORITY / total) * 100
     return (
-        f'<div style="position:relative;background:#E8E4DC;border-radius:6px;height:18px;overflow:visible;margin:6px 0;">'
+        f'<div style="position:relative;background:#242840;border-radius:6px;height:18px;overflow:visible;margin:6px 0;">'
         f'<div style="width:{aitc_w:.1f}%;background:#00843D;height:100%;display:inline-block;border-radius:6px 0 0 6px;"></div>'
         f'<div style="width:{bjp_w:.1f}%;background:#FF6600;height:100%;display:inline-block;"></div>'
         f'<div style="width:{oth_w:.1f}%;background:#AAAAAA;height:100%;display:inline-block;border-radius:0 6px 6px 0;"></div>'
@@ -100,26 +100,26 @@ def render_exit_poll_aggregator() -> None:
     st.markdown("#### 🧮 Aggregated Average")
     st.markdown(
         f"""
-        <div style="background:linear-gradient(135deg,#F0FAF0,#FFFFFF);
-                    border-radius:16px;padding:20px;border:1px solid #E8E4DC;
+        <div style="background:linear-gradient(135deg,#1C2030,#141720);
+                    border-radius:16px;padding:20px;border:1px solid rgba(255,255,255,0.08);
                     box-shadow:0 4px 12px rgba(0,0,0,0.06);margin-bottom:1rem;">
             <div style="display:flex;gap:16px;text-align:center;margin-bottom:12px;">
                 <div style="flex:1;background:#00843D18;border-radius:10px;padding:12px;border:1px solid #00843D44;">
                     <div style="font-weight:800;font-size:2rem;color:#00843D;">{avg_aitc}</div>
-                    <div style="font-size:0.78rem;color:#5C5C7A;font-weight:600;">AITC (Avg)</div>
-                    {'<div style="font-size:0.7rem;background:#E8F5E6;color:#0E6B06;padding:2px 8px;border-radius:20px;margin-top:4px;font-weight:700;">🏆 MAJORITY</div>' if avg_aitc >= MAJORITY else ''}
+                    <div style="font-size:0.78rem;color:#9BA3BC;font-weight:600;">AITC (Avg)</div>
+                    {'<div style="font-size:0.7rem;background:rgba(39,201,110,0.12);color:#27C96E;padding:2px 8px;border-radius:20px;margin-top:4px;font-weight:700;">🏆 MAJORITY</div>' if avg_aitc >= MAJORITY else ''}
                 </div>
                 <div style="flex:1;background:#FF660018;border-radius:10px;padding:12px;border:1px solid #FF660044;">
                     <div style="font-weight:800;font-size:2rem;color:#FF6600;">{avg_bjp}</div>
-                    <div style="font-size:0.78rem;color:#5C5C7A;font-weight:600;">BJP (Avg)</div>
+                    <div style="font-size:0.78rem;color:#9BA3BC;font-weight:600;">BJP (Avg)</div>
                 </div>
-                <div style="flex:1;background:#99999918;border-radius:10px;padding:12px;border:1px solid #99999944;">
-                    <div style="font-weight:800;font-size:2rem;color:#666;">{avg_others}</div>
-                    <div style="font-size:0.78rem;color:#5C5C7A;font-weight:600;">Others (Avg)</div>
+                <div style="flex:1;background:#9BA3BC18;border-radius:10px;padding:12px;border:1px solid #9BA3BC44;">
+                    <div style="font-weight:800;font-size:2rem;color:#9BA3BC;">{avg_others}</div>
+                    <div style="font-size:0.78rem;color:#9BA3BC;font-weight:600;">Others (Avg)</div>
                 </div>
             </div>
             {_mini_bar(avg_aitc, avg_bjp, avg_others)}
-            <div style="font-size:0.72rem;color:#9090A8;text-align:center;margin-top:4px;">
+            <div style="font-size:0.72rem;color:#5C6480;text-align:center;margin-top:4px;">
                 ─── Majority mark: {MAJORITY} seats ───
             </div>
         </div>
