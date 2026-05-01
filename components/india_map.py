@@ -526,39 +526,47 @@ def render_india_map() -> None:
     cols = st.columns(3)
     for i, (state, data) in enumerate(sorted(filtered.items())):
         with cols[i % 3]:
-            sc = STATUS_COLORS.get(data["status"], "#5C6480")
-            sl = STATUS_LABELS.get(data["status"], "—")
-            rc = data["ruling_color"]
+            sc  = STATUS_COLORS.get(data["status"], "#5C6480")
+            sl  = STATUS_LABELS.get(data["status"], "—")
+            rc  = data["ruling_color"]
+            is_no_asm = data["status"] == "no_assembly"
+
+            # Pre-compute optional snippets to avoid nested f-string issues
+            seats_html = (
+                f'<span style="font-size:0.68rem;color:#5C6480;">{data["total_seats"]} seats</span>'
+                if data["total_seats"] > 0 else ""
+            )
+            next_html = (
+                "" if is_no_asm
+                else f'<div style="font-size:0.7rem;color:#5C6480;margin-top:6px;">Next: {sanitize_text(data["next_election_due"])}</div>'
+            )
+            party_html = (
+                "" if is_no_asm
+                else f'<div style="margin:8px 0 4px;"><span style="background:{rc}22;color:{rc};font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid {rc}33;">{sanitize_text(data["ruling_party"])}</span></div>'
+            )
+
             st.markdown(
                 f"""
                 <div style="background:#1C2030;border-radius:12px;padding:14px;
                             border:1px solid rgba(255,255,255,0.07);border-left:5px solid {rc};
                             margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.3);
-                            min-height:130px;">
+                            min-height:{'90px' if is_no_asm else '130px'};">
                     <div style="font-weight:700;color:#E8EAF0;font-size:0.9rem;">
                         {sanitize_text(state)}
                     </div>
                     <div style="font-size:0.72rem;color:#5C6480;margin-top:2px;">
                         {sanitize_text(data['type'])} · {sanitize_text(data['capital'])}
                     </div>
-                    <div style="margin:8px 0 4px;">
-                        <span style="background:{rc}22;color:{rc};
-                                     font-size:0.7rem;font-weight:700;
-                                     padding:2px 8px;border-radius:20px;border:1px solid {rc}33;">
-                            {sanitize_text(data['ruling_party'])}
-                        </span>
-                    </div>
+                    {party_html}
                     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;">
                         <span style="background:{sc}22;color:{sc};
                                      font-size:0.68rem;font-weight:700;
                                      padding:2px 8px;border-radius:20px;border:1px solid {sc}44;">
                             {sl}
                         </span>
-                        {f'<span style="font-size:0.68rem;color:#5C6480;">{data["total_seats"]} seats</span>' if data["total_seats"] > 0 else ''}
+                        {seats_html}
                     </div>
-                    <div style="font-size:0.7rem;color:#5C6480;margin-top:6px;">
-                        Next: {sanitize_text(data['next_election_due'])}
-                    </div>
+                    {next_html}
                 </div>
                 """,
                 unsafe_allow_html=True,
