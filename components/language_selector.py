@@ -4,39 +4,41 @@ CivicPulse — Google Translate Language Selector
 Wires the Google Translate API Key from settings to a language picker
 (Hindi / Bengali / Tamil / English) so the app serves non-English voters.
 
+FIX: API key is read via os.getenv() at call-time (not module import time)
+so that secrets injected by HuggingFace Spaces / GitHub Actions are always
+picked up, regardless of import order.
+
 Usage
 -----
-Call render_language_selector() anywhere in the UI.
-The component stores the chosen language code in st.session_state["language"]
-and translates text via translate_text() / T() when a non-English language
-is selected AND the API key is available.
-
-Quick translation in any component:
     from components.language_selector import T
     st.markdown(T("Hello voter"))
 """
 
 from __future__ import annotations
+import os
 import json
 import urllib.request
-import urllib.parse
 import streamlit as st
-from config.settings import GOOGLE_TRANSLATE_API_KEY
 
 # Supported languages: display name → BCP-47 code
 SUPPORTED_LANGUAGES: dict[str, str] = {
-    "English":  "en",
-    "हिंदी (Hindi)":   "hi",
-    "বাংলা (Bengali)": "bn",
-    "தமிழ் (Tamil)":   "ta",
+    "English":           "en",
+    "हिंदी (Hindi)":    "hi",
+    "বাংলা (Bengali)":  "bn",
+    "தமிழ் (Tamil)":    "ta",
 }
 
 _LANG_CODES = {v: k for k, v in SUPPORTED_LANGUAGES.items()}
 
-# ── In-session translation cache ──────────────────────────────────────────────
-# Key: (text, target_lang)  →  Value: translated string
-# Stored in st.session_state so it persists across reruns but resets on refresh.
+# Session-state cache key
 _CACHE_KEY = "_translate_cache"
+
+
+def _api_key() -> str:
+    """Read the API key fresh from the environment on every call.
+    This ensures HuggingFace / GitHub secrets are always visible,
+    even if settings.py was imported before the env was populated."""
+    return os.getenv("GOOGLE_TRANSLATE_API_KEY", "").strip()
 
 
 def _get_cache() -> dict:
@@ -47,16 +49,13 @@ def _get_cache() -> dict:
 
 def translate_text(text: str, target_lang: str) -> str:
     """
-    Translate *text* to *target_lang* using the Google Cloud Translate v2 REST API.
-    Results are cached in session_state to avoid redundant API calls.
-    Returns the original text on any failure (graceful degradation).
-
-    Parameters
-    ----------
-    text        : Source text (assumed English).
-    target_lang : BCP-47 language code, e.g. "hi", "bn", "ta".
+    Translate *text* to *target_lang* using Google Cloud Translate v2 REST.
+    Caches results in session_state to avoid redundant API calls.
+    Falls back to original text on any error.
     """
-    if not GOOGLE_TRANSLATE_API_KEY or target_lang == "en" or not text or not text.strip():
+    key = _api_key()
+
+    if not key or target_lang == "en" or not text or not text.strip():
         return text
 
     cache = _get_cache()
@@ -67,7 +66,7 @@ def translate_text(text: str, target_lang: str) -> str:
     try:
         url = (
             "https://translation.googleapis.com/language/translate/v2"
-            f"?key={GOOGLE_TRANSLATE_API_KEY}"
+            f"?key={key}"
         )
         payload = json.dumps({
             "q":      text,
@@ -78,7 +77,7 @@ def translate_text(text: str, target_lang: str) -> str:
 
         req = urllib.request.Request(
             url, data=payload,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
         with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read())
@@ -87,8 +86,11 @@ def translate_text(text: str, target_lang: str) -> str:
         cache[cache_key] = translated
         return translated
 
-    except Exception:
-        return text  # always fall back gracefully
+    except Exception as exc:
+        # Log so developers can see what's going wrong
+        import logging
+        logging.getLogger(__name__).warning("translate_text failed: %s", exc)
+        return text  # always degrade gracefully
 
 
 def get_current_language() -> str:
@@ -97,27 +99,20 @@ def get_current_language() -> str:
 
 
 def render_translated(text: str) -> str:
-    """
-    Translate *text* into the currently selected UI language.
-    Returns the original string when language is English or API is unavailable.
-    """
-    lang = get_current_language()
-    return translate_text(text, lang)
+    """Translate *text* into the active UI language."""
+    return translate_text(text, get_current_language())
 
 
-# Short alias — import as `from components.language_selector import T`
+# Short alias — the only symbol most components need
 T = render_translated
 
 
 def render_language_selector() -> None:
     """
-    Render a compact language selector that:
-    1. Stores the chosen language in st.session_state["language"].
-    2. If a non-English language is selected AND no API key is set,
-       injects the Google Translate element widget as a fallback.
-    3. Shows a ✅ confirmation badge for active non-English mode.
+    Render a compact language-picker widget.
+    Stores chosen language in st.session_state["language"] and reruns.
     """
-    lang_names = list(SUPPORTED_LANGUAGES.keys())
+    lang_names   = list(SUPPORTED_LANGUAGES.keys())
     current_code = get_current_language()
     current_name = _LANG_CODES.get(current_code, "English")
     try:
@@ -136,21 +131,20 @@ def render_language_selector() -> None:
     chosen_code = SUPPORTED_LANGUAGES[chosen_name]
 
     if chosen_code != current_code:
-        # Clear translation cache when language changes
+        # Clear translation cache so new language is fetched fresh
         st.session_state[_CACHE_KEY] = {}
         st.session_state["language"] = chosen_code
         st.rerun()
 
-    # ── Non-English feedback ──────────────────────────────────────────────────
+    # Status badge
     if chosen_code != "en":
-        if GOOGLE_TRANSLATE_API_KEY:
+        if _api_key():
             st.markdown(
                 f'<div style="font-size:0.65rem;color:#27C96E;font-weight:700;'
                 f'margin-top:2px;">🌐 {chosen_name} active</div>',
                 unsafe_allow_html=True,
             )
         else:
-            # Inject Google Translate element as zero-cost fallback
             _inject_google_translate_element(chosen_code)
             st.markdown(
                 '<div style="font-size:0.62rem;color:#FF6B1A;font-weight:600;'
@@ -160,10 +154,7 @@ def render_language_selector() -> None:
 
 
 def _inject_google_translate_element(target_lang: str) -> None:
-    """
-    Inject the Google Translate Element widget (free, no API key needed).
-    Falls back gracefully to in-page translation via the public JS widget.
-    """
+    """Fallback: free Google Translate widget (no API key required)."""
     html = f"""
     <div id="google_translate_element" style="display:none;"></div>
     <script type="text/javascript">
@@ -174,7 +165,6 @@ def _inject_google_translate_element(target_lang: str) -> None:
             layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
             autoDisplay: true,
         }}, 'google_translate_element');
-        // Auto-select the target language
         setTimeout(function() {{
             var sel = document.querySelector('.goog-te-combo');
             if (sel) {{
