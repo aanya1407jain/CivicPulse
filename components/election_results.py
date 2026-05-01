@@ -9,7 +9,7 @@ Auto-refreshes every 3 minutes on counting day.
 from __future__ import annotations
 import streamlit as st
 from datetime import datetime
-
+from components.language_selector import T
 from services.election_scraper import fetch_results, get_state_code_from_location, PARTY_COLORS
 
 
