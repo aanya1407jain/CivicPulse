@@ -16,6 +16,7 @@ import streamlit as st
 from config.settings import INDIA, INDIA_CONSTANTS
 from services.election_scraper import fetch_results, STATE_MOCK
 from components.exit_poll_aggregator import DEFAULT_EXIT_POLLS
+from components.language_selector import T
 from utils.location_utils import sanitize_text
 
 
@@ -37,7 +38,7 @@ def render_stat_tiles(results: dict, election_data: dict) -> None:
     count_day = election_data.get("counting_day", "2026-05-04")
     days_left = days_until(count_day)
     days_str  = str(abs(days_left)) if days_left is not None else "—"
-    days_sub  = f"days · {count_day[-5:]}" if days_left and days_left > 0 else "Counting Day"
+    days_sub  = f"{T('days')} · {count_day[-5:]}" if days_left and days_left > 0 else T("Counting Day")
 
     sc      = st.session_state.get("state_code", "WB")
     turnout = STATE_MOCK.get(sc, {}).get(
@@ -48,10 +49,10 @@ def render_stat_tiles(results: dict, election_data: dict) -> None:
     polls = st.session_state.get("exit_polls", DEFAULT_EXIT_POLLS)
 
     tiles = [
-        ("cp-tile-green",  "Seats Won",   str(top_seats), f"{top_name} · {results.get('state', '')[:2]}"),
-        ("cp-tile-blue",   "Counting In", days_str,        days_sub),
-        ("cp-tile-yellow", "Turnout",     str(turnout),    "last election avg"),
-        ("cp-tile-orange", "Exit Polls",  f"+{len(polls)}", "agencies tracked"),
+        ("cp-tile-green",  T("Seats Won"),    str(top_seats), f"{top_name} · {results.get('state', '')[:2]}"),
+        ("cp-tile-blue",   T("Counting In"),  days_str,        days_sub),
+        ("cp-tile-yellow", T("Turnout"),       str(turnout),    T("last election avg")),
+        ("cp-tile-orange", T("Exit Polls"),    f"+{len(polls)}", T("agencies tracked")),
     ]
 
     c1, c2, c3, c4 = st.columns(4)
@@ -86,10 +87,10 @@ def render_constituency_card(results: dict, election_data: dict) -> None:
     chips_html += "</div>"
 
     menu_items = [
-        ("📊", "Live Results"),
-        ("☑️", "Voter Checklist"),
-        ("🎯", "Election Quiz"),
-        ("⭐", "Share Experience"),
+        ("📊", T("Live Results")),
+        ("☑️", T("Voter Checklist")),
+        ("🎯", T("Election Quiz")),
+        ("⭐", T("Share Experience")),
     ]
     menu_html = "".join(
         f'<div class="cp-menu-item">'
@@ -99,10 +100,11 @@ def render_constituency_card(results: dict, election_data: dict) -> None:
         for icon, label in menu_items
     )
 
+    my_const = T("My Constituency")
     st.markdown(
         f"""
         <div class="cp-constituency-card">
-            <div class="cp-const-badge">My Constituency</div>
+            <div class="cp-const-badge">{my_const}</div>
             <div class="cp-const-name">{jurisdiction}</div>
             <div class="cp-const-sub">{phase_info}</div>
             {chips_html}
@@ -121,6 +123,9 @@ def render_party_strength(results: dict) -> None:
     majority = results.get("majority", 148)
     parties  = results.get("parties", [])
 
+    seats_label    = T("seats")
+    majority_label = T("Majority mark")
+
     rows_html = ""
     for p in parties:
         seats = p.get("total", p.get("won", 0) + p.get("leading", 0))
@@ -132,16 +137,17 @@ def render_party_strength(results: dict) -> None:
             <div class="cp-bar-wrap">
                 <div class="cp-bar-fill" style="width:{pct:.1f}%;background:{color};"></div>
             </div>
-            <div class="cp-bar-seats" style="color:{color};">{seats} seats</div>
+            <div class="cp-bar-seats" style="color:{color};">{seats} {seats_label}</div>
         </div>
         """
 
+    section_title = T("Party Strength")
     st.markdown(
         f"""
         <div class="cp-section-card">
-            <div class="cp-section-title">Party Strength — {sanitize_text(results.get('state', 'State'))}</div>
+            <div class="cp-section-title">{section_title} — {sanitize_text(results.get('state', 'State'))}</div>
             {rows_html}
-            <div class="cp-majority-line">Majority mark: {majority} seats</div>
+            <div class="cp-majority-line">{majority_label}: {majority} {seats_label}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -178,10 +184,15 @@ def render_exit_poll_compact() -> None:
             f"</tr>"
         )
 
+    section_title   = T("Exit Poll Aggregator")
+    agencies_label  = T("agencies tracked")
+    agency_col      = T("Agency")
+    others_col      = T("Others")
+
     st.markdown(
         f"""
         <div class="cp-section-card">
-            <div class="cp-section-title">Exit Poll Aggregator</div>
+            <div class="cp-section-title">{section_title}</div>
             <div style="display:flex;gap:12px;margin-bottom:14px;">
                 <div style="flex:1;background:rgba(39,201,110,0.10);border:1px solid rgba(39,201,110,0.25);
                             border-radius:10px;padding:10px;text-align:center;">
@@ -199,16 +210,16 @@ def render_exit_poll_compact() -> None:
                             border-radius:10px;padding:10px;text-align:center;">
                     <div style="font-size:1.6rem;font-weight:800;color:#9BA3BC;">{avg_others}</div>
                     <div style="font-size:0.62rem;font-weight:700;letter-spacing:0.08em;
-                                color:#5C6480;text-transform:uppercase;">OTHERS</div>
+                                color:#5C6480;text-transform:uppercase;">{others_col.upper()}</div>
                 </div>
             </div>
             <div style="font-size:0.65rem;color:#5C6480;font-weight:600;
                         letter-spacing:0.08em;margin-bottom:10px;">
-                {len(polls)} agencies tracked
+                {len(polls)} {agencies_label}
             </div>
             <table class="cp-poll-table">
                 <thead>
-                    <tr><th>Agency</th><th>AITC</th><th>BJP</th><th>OTHERS</th></tr>
+                    <tr><th>{agency_col}</th><th>AITC</th><th>BJP</th><th>{others_col.upper()}</th></tr>
                 </thead>
                 <tbody>{rows_html}</tbody>
             </table>
@@ -243,14 +254,16 @@ def render_dashboard() -> None:
         render_exit_poll_compact()
 
     # Footer
+    data_label    = T("Data: ECI Official · Updated")
+    helpline_label = T("Helpline")
     st.markdown(
         f"""
         <div class="cp-footer">
-            <span>Data: ECI Official · Updated: {results.get('last_updated', '—')}</span>
+            <span>{data_label}: {results.get('last_updated', '—')}</span>
             <a href="https://results.eci.gov.in/" target="_blank">
                 results.eci.gov.in ↗
             </a>
-            <span>Helpline: <b style="color:#FF6B1A;">{INDIA['VOTER_HELPLINE']}</b></span>
+            <span>{helpline_label}: <b style="color:#FF6B1A;">{INDIA['VOTER_HELPLINE']}</b></span>
         </div>
         """,
         unsafe_allow_html=True,
