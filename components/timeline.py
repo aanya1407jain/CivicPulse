@@ -15,6 +15,7 @@ import streamlit as st
 from regions.base import BaseRegionHandler
 from utils.date_utils import days_until, format_date_locale
 from utils.location_utils import sanitize_text
+from components.language_selector import T
 
 
 def render_timeline(handler: BaseRegionHandler, election_data: dict) -> None:
