@@ -25,7 +25,7 @@ from components.historical_trends import render_historical_trends
 from components.exit_poll_aggregator import render_exit_poll_aggregator
 from components.election_quiz import render_election_quiz
 from components.polling_experience import render_polling_experience
-from components.language_selector import render_language_selector
+from components.language_selector import render_language_selector, T
 
 from views.dashboard import render_dashboard
 from utils.location_utils import detect_country_from_input, parse_location, sanitize_text
@@ -102,37 +102,39 @@ def _call_gemini(question: str, election_data: dict) -> str:
 def render_ai_assistant(election_data: dict) -> None:
     remaining = 20 - st.session_state.get("gemini_token_count", 0)
     if not GOOGLE_API_KEY:
-        st.info("💡 Add `GOOGLE_API_KEY` to `.env` to enable the AI assistant.")
+        st.info(T("💡 Add GOOGLE_API_KEY to .env to enable the AI assistant."))
         return
-    st.markdown(f"#### 🤖 AI Voter Assistant (Gemini) · *{remaining} queries left*")
+    st.markdown(f"#### 🤖 {T('AI Voter Assistant')} (Gemini) · *{remaining} {T('queries left')}*")
     for msg in st.session_state["ai_messages"]:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
-    if q := st.chat_input("Ask about voting, ID, booths…"):
+    if q := st.chat_input(T("Ask about voting, ID, booths…")):
         st.session_state["ai_messages"].append({"role": "user", "content": q})
         with st.chat_message("user"):
             st.markdown(q)
         with st.chat_message("assistant"):
-            with st.spinner("Thinking…"):
+            with st.spinner(T("Thinking…")):
                 ans = _call_gemini(q, election_data)
             st.markdown(ans)
         st.session_state["ai_messages"].append({"role": "assistant", "content": ans})
 
 
 def render_topnav() -> None:
+    sub = T("India Election Intelligence")
+    badge = T("COUNTING LIVE")
     st.markdown(
-        """
+        f"""
         <div class="cp-topnav" role="banner">
             <div class="cp-logo">
                 <div class="cp-logo-icon">CP</div>
                 <div class="cp-logo-text">
                     <div class="cp-logo-title">CivicPulse</div>
-                    <div class="cp-logo-sub">India Election Intelligence</div>
+                    <div class="cp-logo-sub">{sub}</div>
                 </div>
             </div>
             <div class="cp-live-badge">
                 <div class="cp-live-dot"></div>
-                COUNTING LIVE
+                {badge}
             </div>
         </div>
         """,
@@ -141,18 +143,23 @@ def render_topnav() -> None:
 
 
 def render_pincode_entry() -> None:
+    headline   = T("Your India Election Dashboard")
+    body       = T("Enter your 6-digit PIN code or state name to load live results, your booth, voter checklist, candidate profiles and more.")
+    pin_label  = T("6-digit PIN code")
+    state_label = T("state name")
+    quick_access = T("Quick Access")
+    search_btn = T("Search")
+
     st.markdown(
-        """
+        f"""
         <div style="max-width:540px;margin:3rem auto 0;text-align:center;padding:0 1rem;">
             <div style="font-size:3rem;margin-bottom:1rem;">🗳️</div>
             <div style="font-size:1.9rem;font-weight:800;color:#E8EAF0;
                         font-family:'DM Sans',sans-serif;margin-bottom:8px;line-height:1.2;">
-                Your India Election Dashboard
+                {headline}
             </div>
             <div style="color:#9BA3BC;font-size:0.95rem;margin-bottom:2rem;line-height:1.6;">
-                Enter your <b style="color:#FF6B1A;">6-digit PIN code</b> or
-                <b style="color:#FF6B1A;">state name</b> to load live results,
-                your booth, voter checklist, candidate profiles and more.
+                {body}
             </div>
         </div>
         """,
@@ -161,19 +168,19 @@ def render_pincode_entry() -> None:
     _, mid, _ = st.columns([1, 2, 1])
     with mid:
         loc     = st.text_input("PIN / State", label_visibility="collapsed",
-                                placeholder="e.g. 700001  or  West Bengal", key="entry_location")
-        clicked = st.button("🔍  Search", type="primary", use_container_width=True)
+                                placeholder=T("e.g. 700001  or  West Bengal"), key="entry_location")
+        clicked = st.button(f"🔍  {search_btn}", type="primary", use_container_width=True)
         if clicked or loc:
             if validate_location_input(loc):
                 if process_location(loc):
                     st.rerun()
             elif loc:
-                st.error("Enter a valid 6-digit PIN code or an Indian state name.")
+                st.error(T("Enter a valid 6-digit PIN code or an Indian state name."))
         st.divider()
         st.markdown(
-            '<div style="text-align:center;font-size:0.75rem;color:#5C6480;'
-            'font-weight:600;letter-spacing:0.08em;text-transform:uppercase;'
-            'margin-bottom:8px;">Quick Access</div>',
+            f'<div style="text-align:center;font-size:0.75rem;color:#5C6480;'
+            f'font-weight:600;letter-spacing:0.08em;text-transform:uppercase;'
+            f'margin-bottom:8px;">{quick_access}</div>',
             unsafe_allow_html=True,
         )
         pin_cols = st.columns(len(st.session_state["saved_pins"]))
@@ -203,7 +210,7 @@ def render_location_bar() -> None:
     with col_lang:
         render_language_selector()
     with col_change:
-        if st.button("📍 Change", use_container_width=True):
+        if st.button(f"📍 {T('Change')}", use_container_width=True):
             for k in ("location", "election_data", "handler", "state_code"):
                 st.session_state[k] = None if k != "location" else ""
             st.rerun()
@@ -233,9 +240,9 @@ def main() -> None:
         tab_candidates, tab_india_map, tab_trends, tab_polls,
         tab_experience, tab_notifications, tab_ai,
     ) = st.tabs([
-        "Dashboard", "Results", "Map", "Quiz", "📋 Voter Guide",
-        "👤 Candidates", "🗺️ India Map", "📈 Trends", "📡 Exit Polls",
-        "🏛️ Share Exp.", "🔔 Notifications", "🤖 AI",
+        T("Dashboard"), T("Results"), T("Map"), T("Quiz"), f"📋 {T('Voter Guide')}",
+        f"👤 {T('Candidates')}", f"🗺️ {T('India Map')}", f"📈 {T('Trends')}", f"📡 {T('Exit Polls')}",
+        f"🏛️ {T('Share Exp.')}", f"🔔 {T('Notifications')}", f"🤖 {T('AI')}",
     ])
 
     with tab_dashboard:   render_dashboard()
