@@ -91,11 +91,11 @@ def _seat_trend_chart() -> None:
         barmode="stack",
         title=dict(
             text="West Bengal Assembly Seats by Party (1977–2021)",
-            font=dict(size=14, color="#1A1A2E"),
+            font=dict(size=14, color="#E8EAF0"),
         ),
-        plot_bgcolor="#FAFAF8",
-        paper_bgcolor="#FAFAF8",
-        font=dict(family="Plus Jakarta Sans, sans-serif", color="#1A1A2E"),
+        plot_bgcolor="#141720",
+        paper_bgcolor="#141720",
+        font=dict(family="Plus Jakarta Sans, sans-serif", color="#E8EAF0"),
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -139,11 +139,11 @@ def _vote_share_chart() -> None:
     fig.update_layout(
         title=dict(
             text="Vote Share Trends by Party (2001–2021)",
-            font=dict(size=14, color="#1A1A2E"),
+            font=dict(size=14, color="#E8EAF0"),
         ),
-        plot_bgcolor="#FAFAF8",
-        paper_bgcolor="#FAFAF8",
-        font=dict(family="Plus Jakarta Sans, sans-serif", color="#1A1A2E"),
+        plot_bgcolor="#141720",
+        paper_bgcolor="#141720",
+        font=dict(family="Plus Jakarta Sans, sans-serif", color="#E8EAF0"),
         legend=dict(
             orientation="h",
             yanchor="bottom",
@@ -183,17 +183,17 @@ def _swing_chart() -> None:
         hovertemplate="<b>BJP Swing</b><br>%{x}<br>%{y:+.1f}%<extra></extra>",
     ))
 
-    fig.add_hline(y=0, line_color="#1A1A2E", line_width=1)
+    fig.add_hline(y=0, line_color="#E8EAF0", line_width=1)
 
     fig.update_layout(
         barmode="group",
         title=dict(
             text="Swing Analysis — Key Constituencies (2021 vs 2016)",
-            font=dict(size=14, color="#1A1A2E"),
+            font=dict(size=14, color="#E8EAF0"),
         ),
-        plot_bgcolor="#FAFAF8",
-        paper_bgcolor="#FAFAF8",
-        font=dict(family="Plus Jakarta Sans, sans-serif", color="#1A1A2E"),
+        plot_bgcolor="#141720",
+        paper_bgcolor="#141720",
+        font=dict(family="Plus Jakarta Sans, sans-serif", color="#E8EAF0"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, bgcolor="rgba(0,0,0,0)"),
         xaxis=dict(gridcolor="#E8E4DC"),
         yaxis=dict(title="Swing (%)", gridcolor="#E8E4DC", tickformat="+.1f"),
