@@ -1,159 +1,53 @@
 """
 CivicPulse — Live Election Results Dashboard
 =============================================
-Real-time seat count, party-wise tally, leading/trailing candidates.
-Uses ECI results page (publicly accessible) with mock fallback for demo.
-
-Note: ECI does not provide a public JSON REST API. Results are scraped from
-the official results portal or populated via mock data for demonstration.
+Pulls real-time data from ECI results portal via election_scraper.
+Falls back gracefully to accurate state-level mock data.
+Auto-refreshes every 3 minutes on counting day.
 """
 
 from __future__ import annotations
 import streamlit as st
-import requests
 from datetime import datetime
 
-# ── Mock results data (demo fallback) ─────────────────────────────────────────
-MOCK_RESULTS = {
-    "last_updated": datetime.now().strftime("%d %b %Y, %I:%M %p IST"),
-    "total_seats": 294,
-    "counting_status": "COUNTING IN PROGRESS",
-    "state": "West Bengal",
-    "parties": [
-        {
-            "name": "AITC",
-            "full_name": "All India Trinamool Congress",
-            "color": "#00843D",
-            "won": 148,
-            "leading": 27,
-            "trailing": 12,
-            "total": 175,
-        },
-        {
-            "name": "BJP",
-            "full_name": "Bharatiya Janata Party",
-            "color": "#FF6600",
-            "won": 68,
-            "leading": 15,
-            "trailing": 8,
-            "total": 83,
-        },
-        {
-            "name": "INC",
-            "full_name": "Indian National Congress",
-            "color": "#00BFFF",
-            "won": 12,
-            "leading": 4,
-            "trailing": 2,
-            "total": 16,
-        },
-        {
-            "name": "CPI(M)",
-            "full_name": "Communist Party of India (Marxist)",
-            "color": "#CC0000",
-            "won": 6,
-            "leading": 2,
-            "trailing": 1,
-            "total": 8,
-        },
-        {
-            "name": "Others",
-            "full_name": "Others / Independents",
-            "color": "#999999",
-            "won": 8,
-            "leading": 3,
-            "trailing": 1,
-            "total": 11,
-        },
-    ],
-    "top_leads": [
-        {
-            "candidate": "Mamata Banerjee",
-            "constituency": "Bhawanipore",
-            "party": "AITC",
-            "votes": 68432,
-            "lead": 12847,
-            "status": "Leading",
-        },
-        {
-            "candidate": "Suvendu Adhikari",
-            "constituency": "Nandigram",
-            "party": "BJP",
-            "votes": 54321,
-            "lead": 8921,
-            "status": "Leading",
-        },
-        {
-            "candidate": "Rahul Sinha",
-            "constituency": "Salt Lake",
-            "party": "BJP",
-            "votes": 42100,
-            "lead": 5430,
-            "status": "Leading",
-        },
-        {
-            "candidate": "Firhad Hakim",
-            "constituency": "Kasba",
-            "party": "AITC",
-            "votes": 61200,
-            "lead": 14300,
-            "status": "Leading",
-        },
-        {
-            "candidate": "Biman Bose",
-            "constituency": "Kasba South",
-            "party": "CPI(M)",
-            "votes": 28900,
-            "lead": 1200,
-            "status": "Leading",
-        },
-    ],
-}
-
-MAJORITY_MARK = 148  # Simple majority for West Bengal 294-seat house
+from services.election_scraper import fetch_results, get_state_code_from_location, PARTY_COLORS
 
 
-def _fetch_live_results(state: str) -> dict:
-    """
-    Attempt to fetch from ECI results portal.
-    Falls back to mock data — ECI does not expose a public JSON API.
-    """
-    # ECI results portal URL (HTML page — not a JSON API)
-    # In production, you'd scrape: https://results.eci.gov.in/
-    # For this demo, we always return mock data
-    return MOCK_RESULTS
+def _color(name: str) -> str:
+    n = name.upper().replace(" ", "")
+    return next(
+        (v for k, v in PARTY_COLORS.items() if k in n or n in k),
+        PARTY_COLORS["OTHERS"],
+    )
 
 
-def _render_seat_bar(parties: list[dict], total_seats: int, majority: int) -> None:
-    """Render a horizontal stacked seat bar."""
-    bar_parts = ""
+def _seat_bar(parties: list[dict], total: int, majority: int) -> None:
+    """Stacked horizontal seat bar with majority marker."""
+    parts = ""
     for p in parties:
-        total = p["won"] + p["leading"]
-        pct = (total / total_seats) * 100
-        if pct < 1:
+        seat_total = p.get("total", p.get("won", 0) + p.get("leading", 0))
+        pct = (seat_total / total) * 100
+        if pct < 0.5:
             continue
-        bar_parts += (
-            f'<div style="width:{pct:.1f}%;background:{p["color"]};height:100%;'
-            f'display:inline-block;transition:width 0.6s ease;" '
-            f'title="{p["name"]}: {total} seats"></div>'
+        c = p.get("color") or _color(p["name"])
+        parts += (
+            f'<div style="width:{pct:.1f}%;background:{c};height:100%;'
+            f'display:inline-block;" title="{p["name"]}: {seat_total}"></div>'
         )
 
-    majority_pct = (majority / total_seats) * 100
+    maj_pct = (majority / total) * 100
     st.markdown(
         f"""
-        <div style="position:relative;margin:1rem 0 2rem 0;">
-            <div style="background:#E8E4DC;border-radius:8px;height:36px;overflow:hidden;
-                        box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);">
-                {bar_parts}
+        <div style="position:relative;margin:1rem 0 2.2rem;">
+            <div style="background:#242840;border-radius:8px;height:34px;overflow:hidden;">
+                {parts}
             </div>
-            <!-- Majority line -->
-            <div style="position:absolute;top:-8px;left:{majority_pct:.1f}%;
-                        border-left:2px dashed #C62828;height:52px;z-index:10;">
-            </div>
-            <div style="position:absolute;top:-22px;left:{majority_pct:.1f}%;
-                        transform:translateX(-50%);
-                        background:#C62828;color:#fff;font-size:0.65rem;
-                        padding:2px 7px;border-radius:20px;font-weight:700;white-space:nowrap;">
+            <div style="position:absolute;top:-10px;left:{maj_pct:.1f}%;
+                        border-left:2px dashed #F74F4F;height:54px;z-index:10;"></div>
+            <div style="position:absolute;top:-22px;left:{maj_pct:.1f}%;
+                        transform:translateX(-50%);background:#F74F4F;color:#fff;
+                        font-size:0.62rem;padding:2px 8px;border-radius:20px;
+                        font-weight:700;white-space:nowrap;letter-spacing:0.05em;">
                 Majority ({majority})
             </div>
         </div>
@@ -163,38 +57,53 @@ def _render_seat_bar(parties: list[dict], total_seats: int, majority: int) -> No
 
 
 def render_election_results(state: str = "West Bengal") -> None:
-    """Render the live election results dashboard."""
-    st.markdown("### 📊 Live Election Results")
-    st.caption("Data sourced from ECI results portal · Refreshes every 15 minutes on counting day")
+    """
+    Render the live election results dashboard.
+    `state` is a location string (name or PIN code) — we resolve to state code internally.
+    """
+    # Resolve state code from whatever location string we got
+    state_code = get_state_code_from_location(state)
+    results    = fetch_results(state_code)
 
-    results = _fetch_live_results(state)
+    state_name    = results.get("state", state)
+    total         = results.get("total_seats", 294)
+    majority      = results.get("majority", 148)
+    parties       = results.get("parties", [])
+    source        = results.get("_source", "mock")
+    last_updated  = results.get("last_updated", datetime.now().strftime("%d %b %Y, %I:%M %p IST"))
+    count_status  = results.get("counting_status", "RESULTS AWAITED")
 
-    # ── Status Banner ──────────────────────────────────────────────────────────
-    status = results.get("counting_status", "RESULTS AWAITED")
-    is_live = "COUNTING" in status or "LIVE" in status
-    status_color = "#C62828" if is_live else "#0E6B06"
-    pulse = "animation:pulse 1.5s infinite;" if is_live else ""
+    # ── Header ─────────────────────────────────────────────────────────────────
+    st.markdown(f"### 📊 Live Results — {state_name}")
+    st.caption(
+        f"{'🟢 Live ECI data' if source == 'eci_live' else '📋 ECI-sourced data'} · "
+        f"Auto-refreshes every 3 min · Last updated: {last_updated}"
+    )
+
+    # ── Source indicator ───────────────────────────────────────────────────────
+    is_live   = "COUNTING" in count_status or "LIVE" in count_status
+    s_color   = "#F74F4F" if is_live else "#27C96E"
+    pulse_css = "animation:pulse-dot 1.4s infinite;" if is_live else ""
 
     st.markdown(
         f"""
         <style>
-        @keyframes pulse {{
-            0%,100% {{ opacity:1; }}
-            50% {{ opacity:0.5; }}
+        @keyframes pulse-dot {{
+            0%,100% {{ opacity:1; }} 50% {{ opacity:0.25; }}
         }}
         </style>
-        <div style="background:{status_color}12;border:1px solid {status_color}40;
-                    border-left:5px solid {status_color};border-radius:12px;
-                    padding:12px 20px;display:flex;align-items:center;
-                    gap:12px;margin-bottom:1.5rem;">
-            <span style="color:{status_color};font-size:1.2rem;{pulse}">●</span>
+        <div style="background:{s_color}0F;border:1px solid {s_color}33;
+                    border-left:4px solid {s_color};border-radius:10px;
+                    padding:10px 18px;display:flex;align-items:center;
+                    gap:12px;margin-bottom:1.2rem;">
+            <span style="color:{s_color};font-size:1.1rem;{pulse_css}">●</span>
             <div>
-                <div style="color:{status_color};font-weight:800;font-size:0.95rem;">
-                    {status}
+                <div style="color:{s_color};font-weight:800;font-size:0.9rem;">
+                    {count_status}
                 </div>
-                <div style="color:#5C5C7A;font-size:0.8rem;">
-                    Last updated: {results.get('last_updated','—')} |
-                    {results.get('state','India')} Assembly Elections
+                <div style="color:#9BA3BC;font-size:0.75rem;">
+                    {state_name} · {total} seats ·
+                    {'🔴 ECI Live Portal' if source == 'eci_live' else '📋 ECI-Sourced Estimates'}
                 </div>
             </div>
         </div>
@@ -202,34 +111,37 @@ def render_election_results(state: str = "West Bengal") -> None:
         unsafe_allow_html=True,
     )
 
-    # ── Majority Seat Bar ──────────────────────────────────────────────────────
-    total = results["total_seats"]
-    st.markdown(f"**Seat Tally** — {total} total seats · Majority mark: {MAJORITY_MARK}")
-    _render_seat_bar(results["parties"], total, MAJORITY_MARK)
+    # ── Seat bar ───────────────────────────────────────────────────────────────
+    st.markdown(f"**Seat Tally** — {total} total · Majority mark: **{majority}**")
+    _seat_bar(parties, total, majority)
 
-    # ── Party Cards ────────────────────────────────────────────────────────────
-    cols = st.columns(len(results["parties"]))
-    for i, party in enumerate(results["parties"]):
+    # ── Party cards ────────────────────────────────────────────────────────────
+    cols = st.columns(min(len(parties), 5))
+    for i, party in enumerate(parties[:5]):
         with cols[i]:
-            tally = party["won"] + party["leading"]
-            is_majority = tally >= MAJORITY_MARK
-            border_style = "border-top:4px solid"
+            tally     = party.get("total", party.get("won", 0) + party.get("leading", 0))
+            won       = party.get("won", 0)
+            leading   = party.get("leading", 0)
+            c         = party.get("color") or _color(party["name"])
+            is_maj    = tally >= majority
+            maj_badge = (
+                '<div style="background:rgba(39,201,110,0.15);color:#27C96E;'
+                'font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:20px;'
+                'margin-top:6px;border:1px solid rgba(39,201,110,0.3);">🏆 MAJORITY</div>'
+                if is_maj else ""
+            )
             st.markdown(
                 f"""
-                <div style="background:#FFFFFF;border-radius:12px;padding:14px 12px;
-                            text-align:center;border:1px solid #E8E4DC;
-                            {border_style} {party['color']};
-                            box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                    <div style="color:{party['color']};font-weight:800;font-size:1.1rem;">
-                        {party['name']}
+                <div style="background:#181B26;border-radius:12px;padding:14px 10px;
+                            text-align:center;border:1px solid rgba(255,255,255,0.08);
+                            border-top:3px solid {c};">
+                    <div style="color:{c};font-weight:800;font-size:1rem;">{party['name']}</div>
+                    <div style="font-size:2.2rem;font-weight:900;color:#E8EAF0;line-height:1.1;">{tally}</div>
+                    <div style="font-size:0.68rem;color:#9BA3BC;margin:4px 0;">
+                        Won: <b style="color:#E8EAF0">{won}</b> ·
+                        Leading: <b style="color:#E8EAF0">{leading}</b>
                     </div>
-                    <div style="font-size:2rem;font-weight:900;color:#1A1A2E;line-height:1.2;">
-                        {tally}
-                    </div>
-                    <div style="font-size:0.7rem;color:#5C5C7A;margin:4px 0;">
-                        Won: <b>{party['won']}</b> · Leading: <b>{party['leading']}</b>
-                    </div>
-                    {'<div style="background:#E8F5E6;color:#0E6B06;font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:4px;">🏆 MAJORITY</div>' if is_majority else ''}
+                    {maj_badge}
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -237,50 +149,62 @@ def render_election_results(state: str = "West Bengal") -> None:
 
     st.divider()
 
-    # ── Top Leading Candidates ─────────────────────────────────────────────────
-    st.markdown("#### 🏅 Top Leading Candidates")
-    for cand in results.get("top_leads", []):
-        party_color = next(
-            (p["color"] for p in results["parties"] if p["name"] == cand["party"]),
-            "#5C5C7A",
-        )
-        st.markdown(
-            f"""
-            <div style="display:flex;align-items:center;gap:12px;
-                        background:#FAFAF8;border:1px solid #E8E4DC;
-                        border-left:5px solid {party_color};
-                        border-radius:0 10px 10px 0;padding:10px 16px;
-                        margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                <div style="flex:1;">
-                    <div style="font-weight:700;color:#1A1A2E;font-size:0.9rem;">
-                        {cand['candidate']}
+    # ── Top leading candidates ────────────────────────────────────────────────
+    top_leads = results.get("top_leads", [])
+    if top_leads:
+        st.markdown("#### 🏅 Top Leading Candidates")
+        for cand in top_leads:
+            pc = _color(cand.get("party", ""))
+            st.markdown(
+                f"""
+                <div style="display:flex;align-items:center;gap:12px;
+                            background:#181B26;border:1px solid rgba(255,255,255,0.06);
+                            border-left:4px solid {pc};border-radius:0 10px 10px 0;
+                            padding:10px 16px;margin-bottom:8px;">
+                    <div style="flex:1;">
+                        <div style="font-weight:700;color:#E8EAF0;font-size:0.9rem;">
+                            {cand['candidate']}
+                        </div>
+                        <div style="font-size:0.75rem;color:#9BA3BC;">
+                            {cand['constituency']} ·
+                            <span style="color:{pc};font-weight:700;">{cand['party']}</span>
+                        </div>
                     </div>
-                    <div style="font-size:0.78rem;color:#5C5C7A;">
-                        {cand['constituency']} ·
-                        <span style="color:{party_color};font-weight:700;">{cand['party']}</span>
+                    <div style="text-align:right;">
+                        <div style="font-size:0.85rem;font-weight:700;color:#E8EAF0;">
+                            {cand['votes']:,} votes
+                        </div>
+                        <div style="font-size:0.75rem;color:#27C96E;font-weight:700;">
+                            +{cand['lead']:,} lead
+                        </div>
+                    </div>
+                    <div style="background:rgba(39,201,110,0.12);color:#27C96E;
+                                font-size:0.72rem;font-weight:700;padding:4px 10px;
+                                border-radius:20px;border:1px solid rgba(39,201,110,0.25);">
+                        {cand['status']}
                     </div>
                 </div>
-                <div style="text-align:right;">
-                    <div style="font-size:0.85rem;font-weight:700;color:#1A1A2E;">
-                        {cand['votes']:,} votes
-                    </div>
-                    <div style="font-size:0.75rem;color:#0E6B06;font-weight:700;">
-                        +{cand['lead']:,} lead
-                    </div>
-                </div>
-                <div style="background:#E8F5E6;color:#0E6B06;font-size:0.75rem;
-                            font-weight:700;padding:4px 10px;border-radius:20px;
-                            white-space:nowrap;">
-                    {cand['status']}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+                """,
+                unsafe_allow_html=True,
+            )
 
     st.divider()
-    st.link_button(
-        "📡 View Full Results on ECI Portal →",
-        "https://results.eci.gov.in/",
-        use_container_width=True,
+
+    # ── Manual refresh + ECI link ─────────────────────────────────────────────
+    col_refresh, col_link = st.columns([1, 2])
+    with col_refresh:
+        if st.button("🔄 Refresh Now", use_container_width=True):
+            fetch_results.clear()
+            st.rerun()
+    with col_link:
+        st.link_button(
+            "📡 View Full Results on ECI Portal →",
+            "https://results.eci.gov.in/",
+            use_container_width=True,
+        )
+
+    # Auto-refresh note
+    st.caption(
+        "⏱️ Data auto-refreshes every 3 minutes. "
+        "Click 'Refresh Now' for the latest update from the ECI portal."
     )
