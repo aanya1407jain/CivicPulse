@@ -12,7 +12,7 @@ import streamlit as st
 from config.settings import GOOGLE_MAPS_API_KEY, INDIA
 from services.maps_service import MapsService
 from utils.location_utils import sanitize_text
-
+from components.language_selector import T
 
 def render_map_view(election_data: dict, user_location: str) -> None:
     """Render the polling station map view with Indian civic context."""
