@@ -8,11 +8,18 @@ Usage
 -----
 Call render_language_selector() anywhere in the UI.
 The component stores the chosen language code in st.session_state["language"]
-and injects the Google Translate element script when a non-English language
-is selected, OR activates the Translate API directly if the key is available.
+and translates text via translate_text() / T() when a non-English language
+is selected AND the API key is available.
+
+Quick translation in any component:
+    from components.language_selector import T
+    st.markdown(T("Hello voter"))
 """
 
 from __future__ import annotations
+import json
+import urllib.request
+import urllib.parse
 import streamlit as st
 from config.settings import GOOGLE_TRANSLATE_API_KEY
 
@@ -26,10 +33,22 @@ SUPPORTED_LANGUAGES: dict[str, str] = {
 
 _LANG_CODES = {v: k for k, v in SUPPORTED_LANGUAGES.items()}
 
+# ── In-session translation cache ──────────────────────────────────────────────
+# Key: (text, target_lang)  →  Value: translated string
+# Stored in st.session_state so it persists across reruns but resets on refresh.
+_CACHE_KEY = "_translate_cache"
+
+
+def _get_cache() -> dict:
+    if _CACHE_KEY not in st.session_state:
+        st.session_state[_CACHE_KEY] = {}
+    return st.session_state[_CACHE_KEY]
+
 
 def translate_text(text: str, target_lang: str) -> str:
     """
     Translate *text* to *target_lang* using the Google Cloud Translate v2 REST API.
+    Results are cached in session_state to avoid redundant API calls.
     Returns the original text on any failure (graceful degradation).
 
     Parameters
@@ -37,14 +56,15 @@ def translate_text(text: str, target_lang: str) -> str:
     text        : Source text (assumed English).
     target_lang : BCP-47 language code, e.g. "hi", "bn", "ta".
     """
-    if not GOOGLE_TRANSLATE_API_KEY or target_lang == "en" or not text:
+    if not GOOGLE_TRANSLATE_API_KEY or target_lang == "en" or not text or not text.strip():
         return text
 
-    try:
-        import urllib.request
-        import urllib.parse
-        import json
+    cache = _get_cache()
+    cache_key = (text, target_lang)
+    if cache_key in cache:
+        return cache[cache_key]
 
+    try:
         url = (
             "https://translation.googleapis.com/language/translate/v2"
             f"?key={GOOGLE_TRANSLATE_API_KEY}"
@@ -56,11 +76,16 @@ def translate_text(text: str, target_lang: str) -> str:
             "format": "text",
         }).encode("utf-8")
 
-        req  = urllib.request.Request(url, data=payload,
-                                      headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(
+            url, data=payload,
+            headers={"Content-Type": "application/json"}
+        )
         with urllib.request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read())
-        return data["data"]["translations"][0]["translatedText"]
+
+        translated = data["data"]["translations"][0]["translatedText"]
+        cache[cache_key] = translated
+        return translated
 
     except Exception:
         return text  # always fall back gracefully
@@ -69,6 +94,19 @@ def translate_text(text: str, target_lang: str) -> str:
 def get_current_language() -> str:
     """Return the BCP-47 code stored in session_state, defaulting to 'en'."""
     return st.session_state.get("language", "en")
+
+
+def render_translated(text: str) -> str:
+    """
+    Translate *text* into the currently selected UI language.
+    Returns the original string when language is English or API is unavailable.
+    """
+    lang = get_current_language()
+    return translate_text(text, lang)
+
+
+# Short alias — import as `from components.language_selector import T`
+T = render_translated
 
 
 def render_language_selector() -> None:
@@ -81,7 +119,6 @@ def render_language_selector() -> None:
     """
     lang_names = list(SUPPORTED_LANGUAGES.keys())
     current_code = get_current_language()
-    # Reverse-map code → display name
     current_name = _LANG_CODES.get(current_code, "English")
     try:
         current_idx = lang_names.index(current_name)
@@ -99,6 +136,8 @@ def render_language_selector() -> None:
     chosen_code = SUPPORTED_LANGUAGES[chosen_name]
 
     if chosen_code != current_code:
+        # Clear translation cache when language changes
+        st.session_state[_CACHE_KEY] = {}
         st.session_state["language"] = chosen_code
         st.rerun()
 
@@ -118,15 +157,6 @@ def render_language_selector() -> None:
                 'margin-top:2px;">Add GOOGLE_TRANSLATE_API_KEY for full translation</div>',
                 unsafe_allow_html=True,
             )
-
-
-def render_translated(text: str) -> str:
-    """
-    Convenience helper: translate *text* using the active session language.
-    Returns translated string (or original if language is English / API unavailable).
-    """
-    lang = get_current_language()
-    return translate_text(text, lang)
 
 
 def _inject_google_translate_element(target_lang: str) -> None:
