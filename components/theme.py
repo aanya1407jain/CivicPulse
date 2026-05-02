@@ -573,7 +573,7 @@ hr {
     font-size: 0.68rem;
     color: var(--red) !important;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.06em;  
     margin-top: 4px;
     padding: 5px;
     border: 1px dashed rgba(247,79,79,0.4);
