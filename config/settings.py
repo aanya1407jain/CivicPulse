@@ -121,9 +121,10 @@ GEMINI_MAX_TOKENS = 512
 
 # ── Rate Limiting ──────────────────────────────────────────────────────────────
 RATE_LIMIT = {
-    "ai_queries_per_session": 20,      # max Gemini queries per browser session
-    "translate_timeout_seconds": 5,    # HTTP timeout for translation requests
-    "scraper_timeout_seconds": 8,      # HTTP timeout for ECI scraper
+    "ai_queries_per_session":        20,   # max Gemini queries per browser session
+    "translate_calls_per_session":   500,  # max translation calls per session
+    "translate_timeout_seconds":     5,    # HTTP timeout for translation requests
+    "scraper_timeout_seconds":       8,    # HTTP timeout for ECI scraper
 }
 
 # ── Security ───────────────────────────────────────────────────────────────────
