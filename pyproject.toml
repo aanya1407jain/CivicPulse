@@ -36,7 +36,7 @@ testpaths    = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts      = "-v --tb=short --strict-markers"
+addopts      = "-v --tb=short --strict-markers --cov=. --cov-report=term-missing --cov-fail-under=80 --cov-omit=tests/*,*/__init__.py,.streamlit/*"
 markers = [
     "integration: marks tests as integration tests (deselect with '-m not integration')",
     "slow: marks tests as slow (deselect with '-m not slow')",
@@ -44,7 +44,7 @@ markers = [
 
 [tool.coverage.run]
 source   = ["."]
-omit     = ["tests/*", "*/migrations/*", ".git/*"]
+omit     = ["tests/*", "*/migrations/*", ".git/*", ".streamlit/*", "*/__init__.py"]
 branch   = true
 
 [tool.coverage.report]
@@ -55,4 +55,6 @@ exclude_lines  = [
     "def __repr__",
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "@abstractmethod",
 ]
