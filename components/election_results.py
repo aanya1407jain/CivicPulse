@@ -83,11 +83,11 @@ def render_election_results(state: str = "West Bengal") -> None:
             0%,100% {{ opacity:1; }} 50% {{ opacity:0.25; }}
         }}
         </style>
-        <div style="background:{s_color}0F;border:1px solid {s_color}33;
+        <div role="status" aria-live="polite" aria-label="{count_status}" style="background:{s_color}0F;border:1px solid {s_color}33;
                     border-left:4px solid {s_color};border-radius:10px;
                     padding:10px 18px;display:flex;align-items:center;
                     gap:12px;margin-bottom:1.2rem;">
-            <span style="color:{s_color};font-size:1.1rem;{pulse_css}">●</span>
+            <span style="color:{s_color};font-size:1.1rem;{pulse_css}" aria-hidden="true">●</span>
             <div>
                 <div style="color:{s_color};font-weight:800;font-size:0.9rem;">
                     {count_status}
@@ -151,7 +151,7 @@ def render_election_results(state: str = "West Bengal") -> None:
             pc = _color(cand.get("party", ""))
             st.markdown(
                 f"""
-                <div style="display:flex;align-items:center;gap:12px;
+                <div role="listitem" aria-label="{cand['candidate']} leading in {cand['constituency']}" style="display:flex;align-items:center;gap:12px;
                             background:#181B26;border:1px solid rgba(255,255,255,0.06);
                             border-left:4px solid {pc};border-radius:0 10px 10px 0;
                             padding:10px 16px;margin-bottom:8px;">
