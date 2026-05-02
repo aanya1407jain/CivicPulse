@@ -1,0 +1,21 @@
+[run]
+source = .
+omit =
+    tests/*
+    .git/*
+    */site-packages/*
+branch = True
+
+[report]
+show_missing = True
+fail_under   = 80
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if TYPE_CHECKING:
+    @st.cache_data
+    @st.cache_resource
+
+[html]
+directory = htmlcov
