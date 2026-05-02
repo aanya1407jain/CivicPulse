@@ -127,12 +127,14 @@ def render_party_strength(results: dict) -> None:
     majority_label = T("Majority mark")
 
     rows_html = ""
+    rows_html_wrapper_open = '<div role="list" aria-label="Party seat counts">'
+    rows_html_wrapper_close = "</div>"
     for p in parties:
         seats = p.get("total", p.get("won", 0) + p.get("leading", 0))
         pct   = min((seats / total) * 100, 100) if total else 0
         color = p.get("color", "#9BA3BC")
         rows_html += f"""
-        <div class="cp-party-row">
+        <div class="cp-party-row" role="listitem">
             <div class="cp-party-name">{sanitize_text(p['name'])}</div>
             <div class="cp-bar-wrap">
                 <div class="cp-bar-fill" style="width:{pct:.1f}%;background:{color};"></div>
@@ -144,7 +146,7 @@ def render_party_strength(results: dict) -> None:
     section_title = T("Party Strength")
     st.markdown(
         f"""
-        <div class="cp-section-card">
+        <div class="cp-section-card" role="region" aria-label="Party seat strength">
             <div class="cp-section-title">{section_title} — {sanitize_text(results.get('state', 'State'))}</div>
             {rows_html}
             <div class="cp-majority-line">{majority_label}: {majority} {seats_label}</div>
