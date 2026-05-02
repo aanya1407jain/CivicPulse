@@ -692,3 +692,17 @@ SKIP_LINK_HTML = """
 <a href="#main-content" class="cp-skip-link">Skip to main content</a>
 <div id="main-content" tabindex="-1"></div>
 """
+
+# ── Content Security Policy ────────────────────────────────────────────────────
+# Injected as a <meta> tag since Streamlit does not expose HTTP headers.
+CSP_META = """
+<meta http-equiv="Content-Security-Policy" content="
+    default-src 'self' https: data: blob:;
+    script-src 'self' 'unsafe-inline' https://translate.googleapis.com https://translate.google.com https://maps.googleapis.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: https: blob:;
+    connect-src 'self' https://translate.googleapis.com https://maps.googleapis.com https://translation.googleapis.com https://results.eci.gov.in https://generativelanguage.googleapis.com;
+    frame-src https://www.google.com https://maps.google.com;
+">
+"""
