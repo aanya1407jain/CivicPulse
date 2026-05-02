@@ -4,16 +4,21 @@ CivicPulse India — 2026 Assembly Intelligence
 Entry point. All heavy render logic lives in views/ and components/.
 """
 
-import streamlit as st
+from __future__ import annotations
 import logging
+import streamlit as st
 from dotenv import load_dotenv
 
 load_dotenv()
 
+# ── Logger must be declared BEFORE any function that uses it ────────────────
+logger = logging.getLogger(__name__)
+
 from config.settings import GOOGLE_API_KEY, GEMINI_MODEL, GEMINI_MAX_TOKENS, INDIA, SECURITY
 
+
 @st.cache_resource(show_spinner=False)
-def _get_gemini_model():
+def _get_gemini_model() -> "genai.GenerativeModel | None":  # type: ignore[name-defined]
     """Cache the Gemini model instance across all sessions — avoids re-init on every rerun."""
     try:
         import google.generativeai as genai
@@ -22,6 +27,8 @@ def _get_gemini_model():
     except Exception as exc:
         logger.error("Failed to initialise Gemini model: %s", exc)
         return None
+
+
 from regions import get_region_handler
 from services.election_scraper import fetch_results, get_state_code_from_location
 from components.theme import DARK_THEME_CSS, ACCESSIBILITY_CSS, SKIP_LINK_HTML, CSP_META
@@ -41,8 +48,6 @@ from components.language_selector import render_language_selector, T
 from views.dashboard import render_dashboard
 from utils.location_utils import detect_country_from_input, parse_location, sanitize_text
 from utils.validators import validate_location_input
-
-logger = logging.getLogger(__name__)
 
 st.set_page_config(
     page_title="CivicPulse | India Election Intelligence",
@@ -87,6 +92,7 @@ _AI_SESSION_LIMIT = 20
 
 
 def _call_gemini(question: str, election_data: dict) -> str:
+    """Call Gemini using the cached model instance — no re-initialisation per query."""
     count = st.session_state.get("gemini_token_count", 0)
     if count >= _AI_SESSION_LIMIT:
         logger.warning("AI session limit reached for session")
@@ -94,11 +100,23 @@ def _call_gemini(question: str, election_data: dict) -> str:
             f"⚠️ Session AI limit reached ({_AI_SESSION_LIMIT} queries). "
             f"Refresh to reset, or call the ECI Helpline: **{INDIA['VOTER_HELPLINE']}**"
         )
+
+    # Enforce input length security limit
+    max_len = SECURITY.get("max_input_length", 200)
+    if len(question) > max_len:
+        return (
+            f"⚠️ Query too long (max {max_len} characters). "
+            "Please shorten your question."
+        )
+
     st.session_state["gemini_token_count"] = count + 1
+
+    # Use the @st.cache_resource cached model — never re-initialise
+    model = _get_gemini_model()
+    if model is None:
+        return "⚠️ AI assistant unavailable. Check GOOGLE_API_KEY in your .env file."
+
     try:
-        import google.generativeai as genai
-        genai.configure(api_key=GOOGLE_API_KEY)
-        model = genai.GenerativeModel(GEMINI_MODEL)
         ctx = (
             f"You are CivicPulse, an Indian election assistant. "
             f"Election: {election_data.get('election_name', 'Indian election')} "
@@ -110,9 +128,6 @@ def _call_gemini(question: str, election_data: dict) -> str:
             generation_config={"max_output_tokens": GEMINI_MAX_TOKENS},
         )
         return resp.text or "Could not generate a response."
-    except ImportError:
-        logger.error("google-generativeai package not installed")
-        return "⚠️ `google-generativeai` not installed."
     except Exception as exc:
         logger.error("Gemini API error: %s", exc)
         return f"⚠️ Error: {exc}\n\nECI Helpline: **{INDIA['VOTER_HELPLINE']}**"
@@ -133,6 +148,11 @@ def render_ai_assistant(election_data: dict) -> None:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
     if q := st.chat_input(T("Ask about voting, ID, booths…")):
+        # Guard input length before sending to AI
+        max_len = SECURITY.get("max_input_length", 200)
+        if len(q) > max_len:
+            st.warning(T(f"Query too long — please keep it under {max_len} characters."))
+            return
         st.session_state["ai_messages"].append({"role": "user", "content": q})
         with st.chat_message("user"):
             st.markdown(q)
