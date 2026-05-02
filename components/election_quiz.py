@@ -1,8 +1,5 @@
 """
 CivicPulse — Election Quiz Component
-=====================================
-Gamified "How much do you know about Indian elections?" awareness quiz.
-Dark-theme version: all inline HTML uses dark palette variables.
 """
 
 from __future__ import annotations
@@ -124,18 +121,16 @@ def _reset_quiz() -> None:
     random.shuffle(q_indices)
     st.session_state["quiz_indices"] = q_indices[:7]
     st.session_state["quiz_current"] = 0
-    st.session_state["quiz_score"] = 0
+    st.session_state["quiz_score"]   = 0
     st.session_state["quiz_answers"] = {}
     st.session_state["quiz_started"] = True
-    st.session_state["quiz_done"] = False
+    st.session_state["quiz_done"]    = False
 
 
 def render_election_quiz() -> None:
-    """Render the election knowledge quiz."""
-    st.markdown("### 🎯 Election Knowledge Quiz")
-    st.caption("Test your knowledge about Indian elections and democracy!")
+    st.markdown(f"### 🎯 {T('Election Knowledge Quiz')}")
+    st.caption(T("Test your knowledge about Indian elections and democracy!"))
 
-    # ── Init state ────────────────────────────────────────────────────────────
     if "quiz_started" not in st.session_state:
         st.session_state["quiz_started"] = False
     if "quiz_done" not in st.session_state:
@@ -143,46 +138,49 @@ def render_election_quiz() -> None:
 
     # ── Welcome screen ────────────────────────────────────────────────────────
     if not st.session_state.get("quiz_started"):
+        headline    = T("How well do you know Indian Elections?")
+        subheadline = T("7 questions · Multiple choice · Learn as you go")
         st.markdown(
-            """
+            f"""
             <div style="background:linear-gradient(135deg,#1C2030,#141720);
                         border-radius:16px;padding:28px;text-align:center;
                         border:1px solid rgba(79,142,247,0.25);box-shadow:0 4px 16px rgba(0,0,0,0.4);">
                 <div style="font-size:3rem;margin-bottom:8px;">🗳️</div>
                 <div style="font-weight:800;font-size:1.3rem;color:#E8EAF0;margin-bottom:8px;">
-                    How well do you know Indian Elections?
+                    {headline}
                 </div>
                 <div style="color:#9BA3BC;font-size:0.9rem;margin-bottom:16px;">
-                    7 questions · Multiple choice · Learn as you go
+                    {subheadline}
                 </div>
                 <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:0.8rem;color:#5C6480;">
-                    <span>📜 Constitution</span>
-                    <span>🗳️ Voting Process</span>
-                    <span>🏛️ Parliament</span>
-                    <span>📄 Documents</span>
+                    <span>📜 {T('Constitution')}</span>
+                    <span>🗳️ {T('Voting Process')}</span>
+                    <span>🏛️ {T('Parliament')}</span>
+                    <span>📄 {T('Documents')}</span>
                 </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-        if st.button("🚀 Start Quiz", type="primary", use_container_width=True, key="start_quiz_btn"):
+        if st.button(f"🚀 {T('Start Quiz')}", type="primary", use_container_width=True, key="start_quiz_btn"):
             _reset_quiz()
             st.rerun()
         return
 
     # ── Quiz done screen ──────────────────────────────────────────────────────
     if st.session_state.get("quiz_done"):
-        score  = st.session_state.get("quiz_score", 0)
-        total  = len(st.session_state.get("quiz_indices", []))
-        pct    = (score / total) * 100 if total else 0
+        score = st.session_state.get("quiz_score", 0)
+        total = len(st.session_state.get("quiz_indices", []))
+        pct   = (score / total) * 100 if total else 0
 
         if pct >= 80:
-            emoji, label, color = "🏆", "Election Expert!", "#27C96E"
+            emoji, label, color = "🏆", T("Election Expert!"),  "#27C96E"
         elif pct >= 50:
-            emoji, label, color = "📚", "Good Citizen!", "#FF6B1A"
+            emoji, label, color = "📚", T("Good Citizen!"),     "#FF6B1A"
         else:
-            emoji, label, color = "🌱", "Keep Learning!", "#4F8EF7"
+            emoji, label, color = "🌱", T("Keep Learning!"),    "#4F8EF7"
 
+        correct_label = T("correct")
         st.markdown(
             f"""
             <div style="background:linear-gradient(135deg,{color}18,#141720);
@@ -191,25 +189,34 @@ def render_election_quiz() -> None:
                 <div style="font-size:4rem;">{emoji}</div>
                 <div style="font-weight:900;font-size:1.5rem;color:{color};margin:8px 0;">{label}</div>
                 <div style="font-size:3rem;font-weight:800;color:#E8EAF0;">{score}/{total}</div>
-                <div style="color:#9BA3BC;font-size:0.9rem;margin-top:4px;">{pct:.0f}% correct</div>
+                <div style="color:#9BA3BC;font-size:0.9rem;margin-top:4px;">{pct:.0f}% {correct_label}</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
         st.divider()
-        st.markdown("#### 📖 Review Your Answers")
+        st.markdown(f"#### 📖 {T('Review Your Answers')}")
         indices = st.session_state.get("quiz_indices", [])
         answers = st.session_state.get("quiz_answers", {})
+        your_answer_label   = T("Your answer")
+        correct_label       = T("Correct")
+        not_answered_label  = T("Not answered")
+
         for idx in indices:
-            q   = QUIZ_QUESTIONS[idx]
-            ans = answers.get(idx)
+            q          = QUIZ_QUESTIONS[idx]
+            ans        = answers.get(idx)
             is_correct = ans == q["answer"]
-            bg    = "rgba(39,201,110,0.10)"  if is_correct else "rgba(247,79,79,0.10)"
-            color = "#27C96E" if is_correct else "#F74F4F"
+            bg         = "rgba(39,201,110,0.10)" if is_correct else "rgba(247,79,79,0.10)"
+            color      = "#27C96E" if is_correct else "#F74F4F"
             border_color = "#27C96E" if is_correct else "#F74F4F"
-            icon  = "✅" if is_correct else "❌"
-            cat_color = CATEGORY_COLORS.get(q["category"], "#9BA3BC")
+            icon       = "✅" if is_correct else "❌"
+            cat_color  = CATEGORY_COLORS.get(q["category"], "#9BA3BC")
+            q_text     = T(q["q"])
+            exp_text   = T(q["explanation"])
+            ans_text   = T(ans) if ans else not_answered_label
+            corr_text  = T(q["answer"])
+            cat_text   = T(q["category"])
             st.markdown(
                 f"""
                 <div style="background:{bg};border-radius:12px;padding:14px;
@@ -218,20 +225,20 @@ def render_election_quiz() -> None:
                         <span style="font-size:1.1rem;">{icon}</span>
                         <div style="flex:1;">
                             <div style="font-weight:700;color:#E8EAF0;font-size:0.88rem;margin-bottom:4px;">
-                                {q['q']}
+                                {q_text}
                             </div>
                             <div style="font-size:0.78rem;margin-bottom:4px;color:#9BA3BC;">
-                                Your answer: <b style="color:{color};">{ans if ans else "Not answered"}</b><br>
-                                Correct: <b style="color:#27C96E;">{q['answer']}</b>
+                                {your_answer_label}: <b style="color:{color};">{ans_text}</b><br>
+                                {correct_label}: <b style="color:#27C96E;">{corr_text}</b>
                             </div>
                             <div style="font-size:0.75rem;color:#5C6480;font-style:italic;">
-                                💡 {q['explanation']}
+                                💡 {exp_text}
                             </div>
                         </div>
                         <span style="background:{cat_color}22;color:{cat_color};
                                      font-size:0.65rem;font-weight:700;padding:2px 8px;
                                      border-radius:20px;white-space:nowrap;border:1px solid {cat_color}44;">
-                            {q['category']}
+                            {cat_text}
                         </span>
                     </div>
                 </div>
@@ -239,7 +246,7 @@ def render_election_quiz() -> None:
                 unsafe_allow_html=True,
             )
 
-        if st.button("🔄 Play Again", type="primary", use_container_width=True, key="replay_btn"):
+        if st.button(f"🔄 {T('Play Again')}", type="primary", use_container_width=True, key="replay_btn"):
             _reset_quiz()
             st.rerun()
         return
@@ -253,15 +260,20 @@ def render_election_quiz() -> None:
         st.rerun()
         return
 
-    q_idx     = indices[current]
-    question  = QUIZ_QUESTIONS[q_idx]
-    total_qs  = len(indices)
-    progress  = current / total_qs
+    q_idx    = indices[current]
+    question = QUIZ_QUESTIONS[q_idx]
+    total_qs = len(indices)
+    progress = current / total_qs
 
-    # Progress bar
-    st.progress(progress, text=f"Question {current + 1} of {total_qs}")
+    question_label = T("Question")
+    of_label       = T("of")
+    score_label    = T("Score")
+
+    st.progress(progress, text=f"{question_label} {current + 1} {of_label} {total_qs}")
 
     cat_color = CATEGORY_COLORS.get(question["category"], "#9BA3BC")
+    q_text    = T(question["q"])
+    cat_text  = T(question["category"])
     st.markdown(
         f"""
         <div style="background:#1C2030;border-radius:16px;padding:20px;
@@ -270,43 +282,35 @@ def render_election_quiz() -> None:
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
                 <span style="background:{cat_color}22;color:{cat_color};font-size:0.72rem;
                              font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid {cat_color}44;">
-                    {question['category']}
+                    {cat_text}
                 </span>
                 <span style="color:#5C6480;font-size:0.78rem;">
-                    Score: {st.session_state.get('quiz_score', 0)}/{current}
+                    {score_label}: {st.session_state.get('quiz_score', 0)}/{current}
                 </span>
             </div>
             <div style="font-weight:700;font-size:1.05rem;color:#E8EAF0;line-height:1.5;">
-                {question['q']}
+                {q_text}
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # Answer tracking
     already_answered = q_idx in st.session_state.get("quiz_answers", {})
 
     if not already_answered:
         for opt in question["options"]:
-            # Wrap the native Streamlit button in an accessible container that
-            # carries aria-pressed="false" so assistive technologies announce the
-            # button role correctly before the user selects an answer.
-            st.markdown(
-                f'<div role="group" aria-label="Answer option">'
-                f'<span aria-pressed="false" style="display:none;"></span>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-            if st.button(opt, key=f"q{q_idx}_opt_{opt}", use_container_width=True):
+            opt_translated = T(opt)
+            if st.button(opt_translated, key=f"q{q_idx}_opt_{opt}", use_container_width=True):
                 if "quiz_answers" not in st.session_state:
                     st.session_state["quiz_answers"] = {}
-                st.session_state["quiz_answers"][q_idx] = opt
+                st.session_state["quiz_answers"][q_idx] = opt  # store original for comparison
                 if opt == question["answer"]:
                     st.session_state["quiz_score"] = st.session_state.get("quiz_score", 0) + 1
                 st.rerun()
     else:
-        chosen = st.session_state["quiz_answers"][q_idx]
+        chosen          = st.session_state["quiz_answers"][q_idx]
+        explanation_lbl = T("Explanation")
         for opt in question["options"]:
             is_correct = opt == question["answer"]
             is_chosen  = opt == chosen
@@ -324,18 +328,19 @@ def render_election_quiz() -> None:
                 f'<div role="button" aria-pressed="{aria_pressed}" tabindex="0" '
                 f'style="background:{bg};border:2px solid {border};border-radius:10px;'
                 f'padding:10px 16px;margin-bottom:6px;color:{text};font-weight:600;font-size:0.9rem;">'
-                f'{icon}{opt}</div>',
+                f'{icon}{T(opt)}</div>',
                 unsafe_allow_html=True,
             )
 
+        explanation_text = T(question["explanation"])
         st.markdown(
             f'<div style="background:rgba(79,142,247,0.10);border-radius:10px;padding:12px;font-size:0.82rem;'
             f'color:#9BA3BC;border-left:4px solid #4F8EF7;margin-top:8px;">'
-            f'💡 <b style="color:#E8EAF0;">Explanation:</b> {question["explanation"]}</div>',
+            f'💡 <b style="color:#E8EAF0;">{explanation_lbl}:</b> {explanation_text}</div>',
             unsafe_allow_html=True,
         )
 
-        btn_label = "Next Question →" if current < total_qs - 1 else "See Results 🏆"
-        if st.button(btn_label, type="primary", use_container_width=True, key=f"next_q_{current}"):
+        next_label = T("Next Question") + " →" if current < total_qs - 1 else T("See Results") + " 🏆"
+        if st.button(next_label, type="primary", use_container_width=True, key=f"next_q_{current}"):
             st.session_state["quiz_current"] = current + 1
             st.rerun()
