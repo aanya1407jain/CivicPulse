@@ -11,7 +11,7 @@ import sys
 import os
 import unittest
 from unittest.mock import patch, MagicMock
-  
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 
@@ -293,3 +293,51 @@ class TestGetStateCode(unittest.TestCase):
 if __name__ == "__main__":
     print("🇮🇳 Starting Translation & Scraper Test Suite…")
     unittest.main(verbosity=2)
+
+
+# ===========================================================================
+#  5. Input validation — validate_input_length / sanitize_and_validate
+# ===========================================================================
+
+class TestInputValidation(unittest.TestCase):
+
+    def test_valid_length(self):
+        from utils.validators import validate_input_length
+        self.assertTrue(validate_input_length("Hello", 200))
+
+    def test_exactly_at_limit(self):
+        from utils.validators import validate_input_length
+        self.assertTrue(validate_input_length("a" * 200, 200))
+
+    def test_exceeds_limit(self):
+        from utils.validators import validate_input_length
+        self.assertFalse(validate_input_length("a" * 201, 200))
+
+    def test_empty_string_valid(self):
+        from utils.validators import validate_input_length
+        self.assertTrue(validate_input_length("", 200))
+
+    def test_non_string_invalid(self):
+        from utils.validators import validate_input_length
+        self.assertFalse(validate_input_length(None, 200))   # type: ignore
+        self.assertFalse(validate_input_length(123, 200))    # type: ignore
+
+    def test_sanitize_and_validate_truncates(self):
+        from utils.validators import sanitize_and_validate
+        result = sanitize_and_validate("a" * 300, max_length=200)
+        self.assertEqual(len(result), 200)
+
+    def test_sanitize_and_validate_escapes_html(self):
+        from utils.validators import sanitize_and_validate
+        result = sanitize_and_validate('<script>alert("xss")</script>', max_length=200)
+        self.assertNotIn("<script>", result)
+
+    def test_sanitize_and_validate_raises_on_non_string(self):
+        from utils.validators import sanitize_and_validate
+        with self.assertRaises(ValueError):
+            sanitize_and_validate(123, max_length=200)   # type: ignore
+
+    def test_sanitize_normal_text_unchanged(self):
+        from utils.validators import sanitize_and_validate
+        result = sanitize_and_validate("West Bengal 700001", max_length=200)
+        self.assertEqual(result, "West Bengal 700001")
