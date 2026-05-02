@@ -2,11 +2,8 @@
 CivicPulse — Language Selector
 ================================
 Uses the free Google Translate endpoint (no API key required).
-Same endpoint browsers use — works on HuggingFace Spaces, GitHub Actions, etc.
-
-Usage:
-    from components.language_selector import T
-    st.markdown(T("Hello voter"))
+Batches multiple strings into a single API call for efficiency.
+Results cached in session_state — cleared on language change.
 """
 
 from __future__ import annotations
@@ -27,6 +24,7 @@ SUPPORTED_LANGUAGES: dict[str, str] = {
 
 _LANG_CODES = {v: k for k, v in SUPPORTED_LANGUAGES.items()}
 _CACHE_KEY  = "_translate_cache"
+_BATCH_KEY  = "_translate_batch_queue"
 
 
 def _get_cache() -> dict:
@@ -37,9 +35,8 @@ def _get_cache() -> dict:
 
 def translate_text(text: str, target_lang: str) -> str:
     """
-    Translate text using the free Google Translate gtx endpoint.
+    Translate a single string using the free Google Translate gtx endpoint.
     No API key needed. Results cached in session_state.
-    Logs warnings on failure — never silently swallows errors.
     """
     if target_lang == "en" or not text or not text.strip():
         return text
@@ -78,6 +75,66 @@ def translate_text(text: str, target_lang: str) -> str:
         return text
 
 
+def translate_batch(texts: list[str], target_lang: str) -> list[str]:
+    """
+    Translate multiple strings in a single HTTP request — far more efficient
+    than calling translate_text() in a loop.
+    Falls back to individual calls on any error.
+    """
+    if target_lang == "en" or not texts:
+        return texts
+
+    cache      = _get_cache()
+    results    = [""] * len(texts)
+    uncached   = []   # (original_index, text)
+
+    for i, text in enumerate(texts):
+        if not text or not text.strip():
+            results[i] = text
+            continue
+        key = (text, target_lang)
+        if key in cache:
+            results[i] = cache[key]
+        else:
+            uncached.append((i, text))
+
+    if not uncached:
+        return results
+
+    # Build a single request with multiple q= params
+    try:
+        base = (
+            f"https://translate.googleapis.com/translate_a/single"
+            f"?client=gtx&sl=en&tl={target_lang}&dt=t"
+        )
+        for _, text in uncached:
+            base += "&q=" + urllib.parse.quote(text, safe="")
+
+        req = urllib.request.Request(base, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            raw  = resp.read()
+            data = json.loads(raw)
+
+        # gtx returns nested list — flatten all translation segments
+        all_translated = [
+            "".join(seg[0] for seg in block if seg[0])
+            for block in data[0]
+            if isinstance(block, list)
+        ]
+
+        for batch_i, (orig_i, text) in enumerate(uncached):
+            translated = all_translated[batch_i] if batch_i < len(all_translated) else text
+            cache[(text, target_lang)] = translated
+            results[orig_i] = translated
+
+    except Exception as exc:
+        logger.warning("translate_batch failed (lang=%s): %s — falling back", target_lang, exc)
+        for orig_i, text in uncached:
+            results[orig_i] = translate_text(text, target_lang)
+
+    return results
+
+
 def get_current_language() -> str:
     """Return BCP-47 code from session_state, defaulting to 'en'."""
     return st.session_state.get("language", "en")
@@ -93,10 +150,7 @@ T = render_translated
 
 
 def render_language_selector() -> None:
-    """
-    Render a compact language-picker widget.
-    Stores chosen language in st.session_state['language'] and reruns.
-    """
+    """Compact language-picker widget."""
     lang_names   = list(SUPPORTED_LANGUAGES.keys())
     current_code = get_current_language()
     current_name = _LANG_CODES.get(current_code, "English")
@@ -117,7 +171,7 @@ def render_language_selector() -> None:
     chosen_code = SUPPORTED_LANGUAGES[chosen_name]
 
     if chosen_code != current_code:
-        st.session_state[_CACHE_KEY] = {}   # clear cache on language change
+        st.session_state[_CACHE_KEY] = {}
         st.session_state["language"] = chosen_code
         st.rerun()
 
