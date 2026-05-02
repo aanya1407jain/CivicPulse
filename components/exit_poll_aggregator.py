@@ -1,5 +1,11 @@
 """
 CivicPulse — Exit Poll Aggregator Component
+==========================================
+Accessibility fixes:
+- Summary cards have role="region" + aria-label
+- Majority badge communicates via text, not colour alone
+- Poll table has proper thead/scope attributes
+- All colour-coded seat numbers include text context
 """
 
 from __future__ import annotations
@@ -7,13 +13,12 @@ import streamlit as st
 from components.language_selector import T
 
 DEFAULT_EXIT_POLLS = [
-    {"agency": "ABP News - CVoter",          "date": "29 April 2026", "aitc": 160, "bjp": 105, "left_others": 29,  "source": "https://abpnews.in"},
+    {"agency": "ABP News - CVoter",           "date": "29 April 2026", "aitc": 160, "bjp": 105, "left_others": 29,  "source": "https://abpnews.in"},
     {"agency": "India Today - Axis My India", "date": "29 April 2026", "aitc": 152, "bjp": 118, "left_others": 24,  "source": "https://indiatoday.in"},
     {"agency": "Republic TV - P-MARQ",        "date": "29 April 2026", "aitc": 138, "bjp": 129, "left_others": 27,  "source": "https://republicworld.com"},
     {"agency": "Times Now - ETG",             "date": "29 April 2026", "aitc": 168, "bjp": 98,  "left_others": 28,  "source": "https://timesnow.com"},
 ]
 
-PARTY_COLORS = {"aitc": "#00843D", "bjp": "#FF6600", "left_others": "#999999"}
 TOTAL_SEATS = 294
 MAJORITY    = 148
 
@@ -28,18 +33,19 @@ def _mini_bar(aitc: int, bjp: int, others: int, total: int = 294) -> str:
     oth_w   = (others / total) * 100
     maj_pct = (MAJORITY / total) * 100
     return (
-        f'<div style="position:relative;background:#242840;border-radius:6px;height:18px;overflow:visible;margin:6px 0;">'
-        f'<div style="width:{aitc_w:.1f}%;background:#00843D;height:100%;display:inline-block;border-radius:6px 0 0 6px;"></div>'
-        f'<div style="width:{bjp_w:.1f}%;background:#FF6600;height:100%;display:inline-block;"></div>'
-        f'<div style="width:{oth_w:.1f}%;background:#AAAAAA;height:100%;display:inline-block;border-radius:0 6px 6px 0;"></div>'
-        f'<div style="position:absolute;top:-4px;left:{maj_pct:.1f}%;border-left:2px dashed #C62828;height:26px;"></div>'
+        f'<div role="img" aria-label="Seat share bar: AITC {aitc}, BJP {bjp}, Others {others}"'
+        f' style="position:relative;background:#242840;border-radius:6px;height:18px;overflow:visible;margin:6px 0;">'
+        f'<div style="width:{aitc_w:.1f}%;background:#00843D;height:100%;display:inline-block;border-radius:6px 0 0 6px;" title="AITC: {aitc} seats"></div>'
+        f'<div style="width:{bjp_w:.1f}%;background:#FF6600;height:100%;display:inline-block;" title="BJP: {bjp} seats"></div>'
+        f'<div style="width:{oth_w:.1f}%;background:#AAAAAA;height:100%;display:inline-block;border-radius:0 6px 6px 0;" title="Others: {others} seats"></div>'
+        f'<div aria-hidden="true" style="position:absolute;top:-4px;left:{maj_pct:.1f}%;border-left:2px dashed #C62828;height:26px;"></div>'
         f'</div>'
     )
 
 
 def render_exit_poll_aggregator() -> None:
     st.markdown(f"### 📡 {T('Exit Poll Aggregator')}")
-    st.caption(T("Average of multiple agency predictions. Add your own poll data below. Exit polls are estimates only — actual results may differ significantly."))
+    st.caption(T("Average of multiple agency predictions. Exit polls are estimates only — actual results may differ significantly."))
 
     disclaimer = T("Exit polls are projections, not results. Indian exit polls have historically had significant margins of error. Actual counting is on May 4, 2026.")
     st.warning(f"⚠️ **{T('Disclaimer')}:** {disclaimer}")
@@ -53,35 +59,49 @@ def render_exit_poll_aggregator() -> None:
     avg_bjp    = round(_avg(polls, "bjp"))
     avg_others = TOTAL_SEATS - avg_aitc - avg_bjp
 
-    majority_text  = T("MAJORITY")
-    majority_mark  = T("Majority mark")
-    aggregated_avg = T("Aggregated Average")
-    others_label   = T("Others")
+    majority_text   = T("MAJORITY")
+    majority_mark   = T("Majority mark")
+    aggregated_avg  = T("Aggregated Average")
+    others_label    = T("Others")
+    seats_label     = T("seats")
+    avg_label       = T("Avg")
+    above_maj_label = T("Above majority threshold")
+
+    aitc_maj_badge = (
+        f'<div role="status" aria-label="{above_maj_label}" '
+        f'style="font-size:0.7rem;background:rgba(39,201,110,0.12);color:#27C96E;'
+        f'padding:2px 8px;border-radius:20px;margin-top:4px;font-weight:700;">'
+        f'🏆 {majority_text}</div>'
+    ) if avg_aitc >= MAJORITY else ""
 
     st.markdown(f"#### 🧮 {aggregated_avg}")
     st.markdown(
         f"""
-        <div style="background:linear-gradient(135deg,#1C2030,#141720);
+        <div role="region" aria-label="{aggregated_avg}: AITC {avg_aitc}, BJP {avg_bjp}, {others_label} {avg_others}"
+             style="background:linear-gradient(135deg,#1C2030,#141720);
                     border-radius:16px;padding:20px;border:1px solid rgba(255,255,255,0.08);
-                    box-shadow:0 4px 12px rgba(0,0,0,0.06);margin-bottom:1rem;">
+                    margin-bottom:1rem;">
             <div style="display:flex;gap:16px;text-align:center;margin-bottom:12px;">
                 <div style="flex:1;background:#00843D18;border-radius:10px;padding:12px;border:1px solid #00843D44;">
-                    <div style="font-weight:800;font-size:2rem;color:#00843D;">{avg_aitc}</div>
-                    <div style="font-size:0.78rem;color:#9BA3BC;font-weight:600;">AITC ({T('Avg')})</div>
-                    {'<div style="font-size:0.7rem;background:rgba(39,201,110,0.12);color:#27C96E;padding:2px 8px;border-radius:20px;margin-top:4px;font-weight:700;">🏆 ' + majority_text + '</div>' if avg_aitc >= MAJORITY else ''}
+                    <div style="font-weight:800;font-size:2rem;color:#00843D;" aria-label="AITC average {avg_aitc} seats">{avg_aitc}</div>
+                    <div style="font-size:0.78rem;color:#9BA3BC;font-weight:600;">AITC ({avg_label})</div>
+                    <div style="font-size:0.7rem;color:#9BA3BC;">{avg_aitc} {seats_label}</div>
+                    {aitc_maj_badge}
                 </div>
                 <div style="flex:1;background:#FF660018;border-radius:10px;padding:12px;border:1px solid #FF660044;">
-                    <div style="font-weight:800;font-size:2rem;color:#FF6600;">{avg_bjp}</div>
-                    <div style="font-size:0.78rem;color:#9BA3BC;font-weight:600;">BJP ({T('Avg')})</div>
+                    <div style="font-weight:800;font-size:2rem;color:#FF6600;" aria-label="BJP average {avg_bjp} seats">{avg_bjp}</div>
+                    <div style="font-size:0.78rem;color:#9BA3BC;font-weight:600;">BJP ({avg_label})</div>
+                    <div style="font-size:0.7rem;color:#9BA3BC;">{avg_bjp} {seats_label}</div>
                 </div>
                 <div style="flex:1;background:#9BA3BC18;border-radius:10px;padding:12px;border:1px solid #9BA3BC44;">
-                    <div style="font-weight:800;font-size:2rem;color:#9BA3BC;">{avg_others}</div>
-                    <div style="font-size:0.78rem;color:#9BA3BC;font-weight:600;">{others_label} ({T('Avg')})</div>
+                    <div style="font-weight:800;font-size:2rem;color:#9BA3BC;" aria-label="{others_label} average {avg_others} seats">{avg_others}</div>
+                    <div style="font-size:0.78rem;color:#9BA3BC;font-weight:600;">{others_label} ({avg_label})</div>
+                    <div style="font-size:0.7rem;color:#9BA3BC;">{avg_others} {seats_label}</div>
                 </div>
             </div>
             {_mini_bar(avg_aitc, avg_bjp, avg_others)}
             <div style="font-size:0.72rem;color:#5C6480;text-align:center;margin-top:4px;">
-                ─── {majority_mark}: {MAJORITY} {T('seats')} ───
+                ─── {majority_mark}: {MAJORITY} {seats_label} ───
             </div>
         </div>
         """,
