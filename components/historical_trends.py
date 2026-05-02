@@ -1,5 +1,11 @@
 """
 CivicPulse — Historical Voting Trends Component
+===============================================
+Accessibility fixes:
+- Plotly charts get aria-label wrappers
+- Caption text describes what each chart shows (not colour-only)
+- Metrics include descriptive labels
+- Chart descriptions added so screen readers get context
 """
 
 from __future__ import annotations
@@ -15,10 +21,10 @@ except ImportError:
 WB_HISTORICAL = {
     "years": [1977, 1982, 1987, 1991, 1996, 2001, 2006, 2011, 2016, 2021],
     "parties": {
-        "CPI(M) / Left Front": {"seats": [230, 238, 251, 188, 202, 143, 235, 62, 32, 0],   "color": "#CC0000"},
-        "INC":                  {"seats": [20, 49, 40, 43, 82, 26, 21, 42, 44, 0],           "color": "#00BFFF"},
+        "CPI(M) / Left Front": {"seats": [230, 238, 251, 188, 202, 143, 235, 62, 32, 0],        "color": "#CC0000"},
+        "INC":                  {"seats": [20, 49, 40, 43, 82, 26, 21, 42, 44, 0],               "color": "#00BFFF"},
         "AITC":                 {"seats": [None, None, None, None, None, 60, 30, 184, 211, 213], "color": "#00843D"},
-        "BJP":                  {"seats": [None, None, None, None, None, 0, 0, 4, 3, 77],    "color": "#FF6600"},
+        "BJP":                  {"seats": [None, None, None, None, None, 0, 0, 4, 3, 77],        "color": "#FF6600"},
     },
     "total_seats": 294,
 }
@@ -71,6 +77,11 @@ def _seat_trend_chart() -> None:
         yaxis=dict(title=T("Seats Won"), gridcolor="#242840"),
         height=380, margin=dict(l=40, r=20, t=60, b=40),
     )
+    # Accessible wrapper with aria-label describing the chart
+    st.markdown(
+        f'<div role="img" aria-label="{T("Stacked bar chart showing West Bengal assembly seats won by party from 1977 to 2021. Left Front dominated until 2011. AITC rose to 213 seats in 2021. BJP grew to 77 seats in 2021.")}"></div>',
+        unsafe_allow_html=True,
+    )
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -85,7 +96,7 @@ def _vote_share_chart() -> None:
         fig.add_trace(go.Scatter(
             name=party, x=years, y=pdata["share"], mode="lines+markers",
             line=dict(color=pdata["color"], width=2.5),
-            marker=dict(size=8, color=pdata["color"]),
+            marker=dict(size=8, color=pdata["color"], symbol="circle"),
             hovertemplate=f"<b>{party}</b><br>Year: %{{x}}<br>{T('Vote Share')}: %{{y:.1f}}%<extra></extra>",
         ))
 
@@ -97,6 +108,10 @@ def _vote_share_chart() -> None:
         xaxis=dict(title=T("Election Year"), gridcolor="#242840"),
         yaxis=dict(title=T("Vote Share (%)"), gridcolor="#242840", range=[0, 60]),
         height=360, margin=dict(l=40, r=20, t=60, b=40),
+    )
+    st.markdown(
+        f'<div role="img" aria-label="{T("Line chart of vote share. AITC grew from 38 percent in 2001 to 47.9 percent in 2021. BJP surged from 4 percent to 38 percent. Left Front collapsed from 48 percent to 8 percent.")}"></div>',
+        unsafe_allow_html=True,
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -130,6 +145,10 @@ def _swing_chart() -> None:
         yaxis=dict(title=T("Swing (%)"), gridcolor="#242840", tickformat="+.1f"),
         height=360, margin=dict(l=40, r=20, t=60, b=80),
     )
+    st.markdown(
+        f'<div role="img" aria-label="{T("Grouped bar chart showing vote swing in 8 constituencies between 2016 and 2021. Positive values mean gain, negative means loss.")}"></div>',
+        unsafe_allow_html=True,
+    )
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -148,20 +167,20 @@ def render_historical_trends() -> None:
         key="trend_chart_type",
     )
 
-    if "Seat" in chart_type:
+    if "Seat" in chart_type or T("Seat Trends") in chart_type:
         _seat_trend_chart()
-        st.caption(T("Key observation: Left Front's 34-year dominance (1977–2011) ended as AITC swept to power in 2011. BJP emerged as main opposition by 2021."))
-    elif "Vote" in chart_type:
+        st.caption(T("Key observation: Left Front dominated from 1977–2011. AITC swept to 213 seats in 2021. BJP rose from 3 to 77 seats."))
+    elif "Vote" in chart_type or T("Vote Share") in chart_type:
         _vote_share_chart()
-        st.caption(T("Key observation: BJP's vote share surged from 4% (2011) to 38% (2021), largely absorbing the collapsed Left vote bank."))
-    elif "Swing" in chart_type:
+        st.caption(T("Key observation: BJP vote share surged from 4% (2011) to 38% (2021), largely absorbing the collapsed Left vote."))
+    elif "Swing" in chart_type or T("Swing") in chart_type:
         _swing_chart()
-        st.caption(T("Key observation: AITC gained significantly in most constituencies in 2021, while BJP recorded negative swings in traditionally strong Left seats."))
+        st.caption(T("Key observation: AITC gained in most constituencies in 2021 while BJP recorded negative swings in traditionally Left seats."))
 
     st.divider()
     st.markdown(f"#### 📋 {T('Quick Statistics — 2021 vs 2016')}")
     c1, c2, c3, c4 = st.columns(4)
-    with c1: st.metric(T("AITC Seats 2021"), "213", "+2 vs 2016")
-    with c2: st.metric(T("BJP Seats 2021"),  "77",  "+74 vs 2016")
-    with c3: st.metric(T("Left Seats 2021"), "0",   "-32 vs 2016")
-    with c4: st.metric(T("Voter Turnout 2021"), "82.1%", "+0.8%")
+    with c1: st.metric(T("AITC Seats 2021"), "213", "+2 vs 2016",  help=T("AITC won 213 seats in 2021, up from 211 in 2016"))
+    with c2: st.metric(T("BJP Seats 2021"),  "77",  "+74 vs 2016", help=T("BJP won 77 seats in 2021, up from 3 in 2016"))
+    with c3: st.metric(T("Left Seats 2021"), "0",   "-32 vs 2016", help=T("Left Front won 0 seats in 2021, down from 32 in 2016"))
+    with c4: st.metric(T("Voter Turnout 2021"), "82.1%", "+0.8%",  help=T("Voter turnout was 82.1 percent in 2021"))
