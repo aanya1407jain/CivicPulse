@@ -94,3 +94,26 @@ __all__ = [
     "validate_email",
     "validate_phone",
 ]
+
+
+# ── Input length guard ─────────────────────────────────────────────────────────
+from config.settings import SECURITY as _SECURITY
+
+MAX_INPUT_LENGTH: int = _SECURITY.get("max_input_length", 200)
+
+
+def validate_input_length(value: str, max_length: int = MAX_INPUT_LENGTH) -> bool:
+    """Return True if *value* is within the allowed maximum length."""
+    return isinstance(value, str) and len(value) <= max_length
+
+
+def sanitize_and_validate(value: str, max_length: int = MAX_INPUT_LENGTH) -> str:
+    """
+    Sanitize and length-check user input.
+    Returns the sanitized string truncated to max_length.
+    Raises ValueError if value is not a string.
+    """
+    if not isinstance(value, str):
+        raise ValueError(f"Expected str, got {type(value).__name__}")
+    from utils.location_utils import sanitize_text
+    return sanitize_text(value[:max_length])
