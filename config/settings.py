@@ -17,7 +17,7 @@ APP_CONFIG = {
     "version": "2.0.0-IN",
     "description": "Localized Election Intelligence for Indian Citizens",
     "author": "CivicPulse Hackathon Team",
-    "github": "https://github.com/your-username/civicpulse",
+    "github": "https://github.com/aanya1407jain/CivicPulse",
 }
 
 # ── Google API Keys ───────────────────────────────────────────────────────────
@@ -132,4 +132,3 @@ SECURITY = {
     "sanitize_html": True,             # enforce html.escape() on all user strings
     "log_level": "WARNING",            # minimum severity logged to console
 }
-
