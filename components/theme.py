@@ -573,7 +573,7 @@ hr {
     font-size: 0.68rem;
     color: var(--red) !important;
     font-weight: 700;
-    letter-spacing: 0.06em;  
+    letter-spacing: 0.06em;
     margin-top: 4px;
     padding: 5px;
     border: 1px dashed rgba(247,79,79,0.4);
@@ -630,23 +630,25 @@ hr {
 # ── ACCESSIBILITY ADDITIONS ────────────────────────────────────────────────────
 ACCESSIBILITY_CSS = """
 <style>
-/* Skip-to-main-content link (visible on focus only) */
+/* Skip-to-main-content link — always visible at top */
 .cp-skip-link {
-    position: absolute;
-    top: -100px;
-    left: 1rem;
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 9999;
     background: #FF6B1A;
     color: #fff !important;
-    padding: 8px 18px;
+    padding: 6px 20px;
     border-radius: 0 0 8px 8px;
     font-weight: 700;
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     text-decoration: none;
-    transition: top 0.2s;
+    letter-spacing: 0.03em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 .cp-skip-link:focus {
-    top: 0;
     outline: 3px solid #fff;
     outline-offset: 2px;
 }
