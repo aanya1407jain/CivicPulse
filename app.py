@@ -10,10 +10,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from config.settings import GOOGLE_API_KEY, GEMINI_MODEL, GEMINI_MAX_TOKENS, INDIA
+from config.settings import GOOGLE_API_KEY, GEMINI_MODEL, GEMINI_MAX_TOKENS, INDIA, SECURITY
+
+@st.cache_resource(show_spinner=False)
+def _get_gemini_model():
+    """Cache the Gemini model instance across all sessions — avoids re-init on every rerun."""
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=GOOGLE_API_KEY)
+        return genai.GenerativeModel(GEMINI_MODEL)
+    except Exception as exc:
+        logger.error("Failed to initialise Gemini model: %s", exc)
+        return None
 from regions import get_region_handler
 from services.election_scraper import fetch_results, get_state_code_from_location
-from components.theme import DARK_THEME_CSS, ACCESSIBILITY_CSS, SKIP_LINK_HTML
+from components.theme import DARK_THEME_CSS, ACCESSIBILITY_CSS, SKIP_LINK_HTML, CSP_META
 from components.timeline import render_timeline
 from components.checklist import render_checklist
 from components.map_view import render_map_view
@@ -243,6 +254,7 @@ def render_location_bar() -> None:
 
 def main() -> None:
     init_session()
+    st.markdown(CSP_META, unsafe_allow_html=True)
     st.markdown(DARK_THEME_CSS, unsafe_allow_html=True)
     st.markdown(ACCESSIBILITY_CSS, unsafe_allow_html=True)
     st.markdown(SKIP_LINK_HTML, unsafe_allow_html=True)
