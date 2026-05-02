@@ -626,3 +626,67 @@ hr {
 .cp-footer a { color: var(--orange) !important; text-decoration: none; }
 </style>
 """
+
+# ── ACCESSIBILITY ADDITIONS ────────────────────────────────────────────────────
+ACCESSIBILITY_CSS = """
+<style>
+/* Skip-to-main-content link (visible on focus only) */
+.cp-skip-link {
+    position: absolute;
+    top: -100px;
+    left: 1rem;
+    z-index: 9999;
+    background: #FF6B1A;
+    color: #fff !important;
+    padding: 8px 18px;
+    border-radius: 0 0 8px 8px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    text-decoration: none;
+    transition: top 0.2s;
+}
+.cp-skip-link:focus {
+    top: 0;
+    outline: 3px solid #fff;
+    outline-offset: 2px;
+}
+
+/* High-contrast focus rings on all interactive elements */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+    outline: 3px solid #FF6B1A !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
+}
+
+/* Status text labels alongside coloured indicators */
+.cp-status-text {
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-left: 6px;
+    color: inherit;
+}
+
+/* Visually-hidden utility (screen readers only) */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+}
+</style>
+"""
+
+SKIP_LINK_HTML = """
+<a href="#main-content" class="cp-skip-link">Skip to main content</a>
+<div id="main-content" tabindex="-1"></div>
+"""
