@@ -13,7 +13,7 @@ load_dotenv()
 from config.settings import GOOGLE_API_KEY, GEMINI_MODEL, GEMINI_MAX_TOKENS, INDIA
 from regions import get_region_handler
 from services.election_scraper import fetch_results, get_state_code_from_location
-from components.theme import DARK_THEME_CSS
+from components.theme import DARK_THEME_CSS, ACCESSIBILITY_CSS, SKIP_LINK_HTML
 from components.timeline import render_timeline
 from components.checklist import render_checklist
 from components.map_view import render_map_view
@@ -40,6 +40,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# ── Session defaults ────────────────────────────────────────────────────────────
 
 def init_session() -> None:
     defaults = {
@@ -69,12 +70,17 @@ def process_location(location: str) -> bool:
     return True
 
 
+# ── AI Assistant ────────────────────────────────────────────────────────────────
+
+_AI_SESSION_LIMIT = 20
+
+
 def _call_gemini(question: str, election_data: dict) -> str:
-    BUDGET = 20
-    count  = st.session_state.get("gemini_token_count", 0)
-    if count >= BUDGET:
+    count = st.session_state.get("gemini_token_count", 0)
+    if count >= _AI_SESSION_LIMIT:
+        logger.warning("AI session limit reached for session")
         return (
-            f"⚠️ Session AI limit reached ({BUDGET} queries). "
+            f"⚠️ Session AI limit reached ({_AI_SESSION_LIMIT} queries). "
             f"Refresh to reset, or call the ECI Helpline: **{INDIA['VOTER_HELPLINE']}**"
         )
     st.session_state["gemini_token_count"] = count + 1
@@ -82,10 +88,10 @@ def _call_gemini(question: str, election_data: dict) -> str:
         import google.generativeai as genai
         genai.configure(api_key=GOOGLE_API_KEY)
         model = genai.GenerativeModel(GEMINI_MODEL)
-        ctx   = (
+        ctx = (
             f"You are CivicPulse, an Indian election assistant. "
-            f"Election: {election_data.get('election_name','Indian election')} "
-            f"in {election_data.get('jurisdiction','India')}. "
+            f"Election: {election_data.get('election_name', 'Indian election')} "
+            f"in {election_data.get('jurisdiction', 'India')}. "
             f"ECI Helpline: {INDIA['VOTER_HELPLINE']}. Under 150 words."
         )
         resp = model.generate_content(
@@ -94,17 +100,24 @@ def _call_gemini(question: str, election_data: dict) -> str:
         )
         return resp.text or "Could not generate a response."
     except ImportError:
+        logger.error("google-generativeai package not installed")
         return "⚠️ `google-generativeai` not installed."
     except Exception as exc:
+        logger.error("Gemini API error: %s", exc)
         return f"⚠️ Error: {exc}\n\nECI Helpline: **{INDIA['VOTER_HELPLINE']}**"
 
 
 def render_ai_assistant(election_data: dict) -> None:
-    remaining = 20 - st.session_state.get("gemini_token_count", 0)
+    remaining = _AI_SESSION_LIMIT - st.session_state.get("gemini_token_count", 0)
     if not GOOGLE_API_KEY:
         st.info(T("💡 Add GOOGLE_API_KEY to .env to enable the AI assistant."))
         return
-    st.markdown(f"#### 🤖 {T('AI Voter Assistant')} (Gemini) · *{remaining} {T('queries left')}*")
+    st.markdown(
+        f'<section aria-label="AI Voter Assistant">'
+        f'<h4>🤖 {T("AI Voter Assistant")} (Gemini) · '
+        f'<em>{remaining} {T("queries left")}</em></h4></section>',
+        unsafe_allow_html=True,
+    )
     for msg in st.session_state["ai_messages"]:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
@@ -119,56 +132,63 @@ def render_ai_assistant(election_data: dict) -> None:
         st.session_state["ai_messages"].append({"role": "assistant", "content": ans})
 
 
+# ── Layout helpers ──────────────────────────────────────────────────────────────
+
 def render_topnav() -> None:
-    sub = T("India Election Intelligence")
+    sub   = T("India Election Intelligence")
     badge = T("COUNTING LIVE")
     st.markdown(
         f"""
-        <div class="cp-topnav" role="banner">
-            <div class="cp-logo">
-                <div class="cp-logo-icon">CP</div>
+        <nav class="cp-topnav" role="navigation" aria-label="CivicPulse main navigation">
+            <div class="cp-logo" aria-label="CivicPulse logo">
+                <div class="cp-logo-icon" aria-hidden="true">CP</div>
                 <div class="cp-logo-text">
                     <div class="cp-logo-title">CivicPulse</div>
                     <div class="cp-logo-sub">{sub}</div>
                 </div>
             </div>
-            <div class="cp-live-badge">
-                <div class="cp-live-dot"></div>
-                {badge}
+            <div class="cp-live-badge" role="status" aria-live="polite" aria-label="Election counting live">
+                <div class="cp-live-dot" aria-hidden="true"></div>
+                <span>{badge}</span>
             </div>
-        </div>
+        </nav>
         """,
         unsafe_allow_html=True,
     )
 
 
 def render_pincode_entry() -> None:
-    headline   = T("Your India Election Dashboard")
-    body       = T("Enter your 6-digit PIN code or state name to load live results, your booth, voter checklist, candidate profiles and more.")
-    pin_label  = T("6-digit PIN code")
-    state_label = T("state name")
+    headline     = T("Your India Election Dashboard")
+    body         = T("Enter your 6-digit PIN code or state name to load live results, your booth, voter checklist, candidate profiles and more.")
     quick_access = T("Quick Access")
-    search_btn = T("Search")
+    search_btn   = T("Search")
 
     st.markdown(
         f"""
+        <main id="main-content" role="main">
         <div style="max-width:540px;margin:3rem auto 0;text-align:center;padding:0 1rem;">
-            <div style="font-size:3rem;margin-bottom:1rem;">🗳️</div>
-            <div style="font-size:1.9rem;font-weight:800;color:#E8EAF0;
+            <div style="font-size:3rem;margin-bottom:1rem;" aria-hidden="true">🗳️</div>
+            <h1 style="font-size:1.9rem;font-weight:800;color:#E8EAF0;
                         font-family:'DM Sans',sans-serif;margin-bottom:8px;line-height:1.2;">
                 {headline}
-            </div>
-            <div style="color:#9BA3BC;font-size:0.95rem;margin-bottom:2rem;line-height:1.6;">
+            </h1>
+            <p style="color:#9BA3BC;font-size:0.95rem;margin-bottom:2rem;line-height:1.6;">
                 {body}
-            </div>
+            </p>
         </div>
+        </main>
         """,
         unsafe_allow_html=True,
     )
     _, mid, _ = st.columns([1, 2, 1])
     with mid:
-        loc     = st.text_input("PIN / State", label_visibility="collapsed",
-                                placeholder=T("e.g. 700001  or  West Bengal"), key="entry_location")
+        loc     = st.text_input(
+            "PIN / State",
+            label_visibility="collapsed",
+            placeholder=T("e.g. 700001  or  West Bengal"),
+            key="entry_location",
+            help=T("Enter your 6-digit PIN code or Indian state name"),
+        )
         clicked = st.button(f"🔍  {search_btn}", type="primary", use_container_width=True)
         if clicked or loc:
             if validate_location_input(loc):
@@ -178,15 +198,16 @@ def render_pincode_entry() -> None:
                 st.error(T("Enter a valid 6-digit PIN code or an Indian state name."))
         st.divider()
         st.markdown(
-            f'<div style="text-align:center;font-size:0.75rem;color:#5C6480;'
+            f'<p style="text-align:center;font-size:0.75rem;color:#5C6480;'
             f'font-weight:600;letter-spacing:0.08em;text-transform:uppercase;'
-            f'margin-bottom:8px;">{quick_access}</div>',
+            f'margin-bottom:8px;" aria-label="{quick_access}">{quick_access}</p>',
             unsafe_allow_html=True,
         )
         pin_cols = st.columns(len(st.session_state["saved_pins"]))
         for i, pin in enumerate(st.session_state["saved_pins"]):
             with pin_cols[i]:
-                if st.button(pin, key=f"quick_{i}", use_container_width=True):
+                if st.button(pin, key=f"quick_{i}", use_container_width=True,
+                             help=f"Quick load: {pin}"):
                     if process_location(pin.split(" — ")[0].strip()):
                         st.rerun()
 
@@ -196,31 +217,36 @@ def render_location_bar() -> None:
     jurisdiction = data.get("jurisdiction", st.session_state.get("location", "")) if data else ""
     col_info, col_lang, col_change = st.columns([3, 1, 1])
     with col_info:
+        safe_j   = sanitize_text(jurisdiction)
+        safe_loc = sanitize_text(st.session_state.get("location", ""))
         st.markdown(
-            f'<div style="background:#181B26;border:1px solid rgba(255,255,255,0.08);'
+            f'<div role="region" aria-label="Current location: {safe_j}"'
+            f' style="background:#181B26;border:1px solid rgba(255,255,255,0.08);'
             f'border-radius:8px;padding:8px 14px;display:flex;align-items:center;gap:10px;">'
-            f'<span style="font-size:0.75rem;font-weight:700;color:#FF6B1A;">📍</span>'
-            f'<span style="font-size:0.88rem;font-weight:600;color:#E8EAF0;">'
-            f'{sanitize_text(jurisdiction)}</span>'
-            f'<span style="font-size:0.72rem;color:#5C6480;margin-left:4px;">'
-            f'· {sanitize_text(st.session_state.get("location",""))}</span>'
+            f'<span aria-hidden="true" style="font-size:0.75rem;font-weight:700;color:#FF6B1A;">📍</span>'
+            f'<span style="font-size:0.88rem;font-weight:600;color:#E8EAF0;">{safe_j}</span>'
+            f'<span style="font-size:0.72rem;color:#5C6480;margin-left:4px;">· {safe_loc}</span>'
             f'</div>',
             unsafe_allow_html=True,
         )
     with col_lang:
         render_language_selector()
     with col_change:
-        if st.button(f"📍 {T('Change')}", use_container_width=True):
+        if st.button(f"📍 {T('Change')}", use_container_width=True,
+                     help=T("Change your location")):
             for k in ("location", "election_data", "handler", "state_code"):
                 st.session_state[k] = None if k != "location" else ""
             st.rerun()
 
 
+# ── Main ────────────────────────────────────────────────────────────────────────
+
 def main() -> None:
     init_session()
     st.markdown(DARK_THEME_CSS, unsafe_allow_html=True)
-    st.markdown("<script>document.documentElement.setAttribute('lang','en');</script>",
-                unsafe_allow_html=True)
+    st.markdown(ACCESSIBILITY_CSS, unsafe_allow_html=True)
+    st.markdown(SKIP_LINK_HTML, unsafe_allow_html=True)
+
     render_topnav()
 
     if not st.session_state.get("election_data"):
