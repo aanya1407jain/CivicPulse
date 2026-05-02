@@ -118,3 +118,18 @@ CACHE_TTL_SECONDS = CACHE_TTL
 # ── Gemini Model ──────────────────────────────────────────────────────────────
 GEMINI_MODEL = "gemini-2.0-flash-lite"
 GEMINI_MAX_TOKENS = 512
+
+# ── Rate Limiting ──────────────────────────────────────────────────────────────
+RATE_LIMIT = {
+    "ai_queries_per_session": 20,      # max Gemini queries per browser session
+    "translate_timeout_seconds": 5,    # HTTP timeout for translation requests
+    "scraper_timeout_seconds": 8,      # HTTP timeout for ECI scraper
+}
+
+# ── Security ───────────────────────────────────────────────────────────────────
+SECURITY = {
+    "max_input_length": 200,           # max chars accepted from any user input field
+    "sanitize_html": True,             # enforce html.escape() on all user strings
+    "log_level": "WARNING",            # minimum severity logged to console
+}
+
