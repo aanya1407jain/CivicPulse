@@ -78,11 +78,11 @@ MOCK_CANDIDATES = [
 
 def _criminal_badge(count: int) -> str:
     if count == 0:
-        return '<span style="background:rgba(39,201,110,0.12);color:#27C96E;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid rgba(39,201,110,0.3);">✅ No Cases</span>'
+        return '<span role="img" aria-label="No criminal cases" style="background:rgba(39,201,110,0.12);color:#27C96E;font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid rgba(39,201,110,0.3);">✅ No Cases</span>'
     color  = "#F74F4F" if count >= 3 else "#FF6B1A"
     bg     = "rgba(247,79,79,0.12)"  if count >= 3 else "rgba(255,107,26,0.12)"
     border = "rgba(247,79,79,0.3)"   if count >= 3 else "rgba(255,107,26,0.3)"
-    return f'<span style="background:{bg};color:{color};font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid {border};">⚠️ {count} Case{"s" if count > 1 else ""}</span>'
+    return f'<span role="img" aria-label="{count} criminal case{"s" if count > 1 else ""}" style="background:{bg};color:{color};font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid {border};">⚠️ {count} Case{"s" if count > 1 else ""}</span>'
 
 
 def render_candidate_profiles(constituency: str = "") -> None:
