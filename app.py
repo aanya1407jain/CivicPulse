@@ -124,10 +124,11 @@ def _call_gemini(question: str, election_data: dict) -> str:
             f"ECI Helpline: {INDIA['VOTER_HELPLINE']}. Under 150 words."
         )
         resp = model.generate_content(
-            f"{ctx}\n\nVoter question: {question}",
-            generation_config={"max_output_tokens": GEMINI_MAX_TOKENS},
+        f"{ctx}\n\nVoter question: {question}",
+        generation_config={"max_output_tokens": GEMINI_MAX_TOKENS},
+        stream=True,
         )
-        return resp.text or "Could not generate a response."
+        return "".join(chunk.text for chunk in resp if chunk.text)
     except Exception as exc:
         logger.error("Gemini API error: %s", exc)
         return f"⚠️ Error: {exc}\n\nECI Helpline: **{INDIA['VOTER_HELPLINE']}**"
