@@ -254,6 +254,15 @@ def render_dashboard() -> None:
         render_party_strength(results)
     with col_b:
         render_exit_poll_compact()
+    st.divider()
+    st.markdown("#### 📅 Add Election Reminders to Google Calendar")
+    from services.calendar_service import CalendarService
+    cal = CalendarService()
+    links = cal.generate_reminder_links(data)
+    cols = st.columns(len(links)) if links else []
+    for col, item in zip(cols, links):
+        with col:
+            st.link_button(f"📅 {item['label']}", item['link'], use_container_width=True)
 
     # Footer
     data_label    = T("Data: ECI Official · Updated")
