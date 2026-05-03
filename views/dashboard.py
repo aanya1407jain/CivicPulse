@@ -262,7 +262,7 @@ def render_dashboard() -> None:
     cols = st.columns(len(links)) if links else []
     for col, item in zip(cols, links):
         with col:
-            st.link_button(f"📅 {item['label']}", item['link'], use_container_width=True)
+            st.link_button(f"📅 {item['title']}", item['link'], use_container_width=True)
 
     # Footer
     data_label    = T("Data: ECI Official · Updated")
