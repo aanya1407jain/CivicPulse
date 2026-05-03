@@ -3,12 +3,127 @@ CivicPulse — Dark Dashboard Theme
 ===================================
 Matches the UI in the design screenshot:
 - Dark navy/charcoal background
-- Orange accent (saffron)  
+- Orange accent (saffron)
 - Top horizontal nav bar (not sidebar tabs)
 - Stat tiles with large numbers
 - Constituency card on the left
 - Party strength horizontal bar
+
+WCAG 2.1 AA contrast checker runs at import time.
+Any pair below 4.5:1 (normal text) or 3:1 (large text) is logged as a warning.
 """
+
+from __future__ import annotations
+import logging
+import math
+
+logger = logging.getLogger(__name__)
+
+# ── WCAG 2.1 AA Contrast Checker ──────────────────────────────────────────────
+
+def _hex_to_rgb(hex_color: str) -> tuple[float, float, float]:
+    """Convert #RRGGBB or #RGB hex string to (R, G, B) 0-255 floats."""
+    h = hex_color.lstrip("#")
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))  # type: ignore[return-value]
+
+
+def _relative_luminance(hex_color: str) -> float:
+    """
+    Compute WCAG 2.1 relative luminance (0.0–1.0) for a hex colour.
+    Formula: https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
+    """
+    rgb = _hex_to_rgb(hex_color)
+    channels = []
+    for c in rgb:
+        srgb = c / 255.0
+        if srgb <= 0.03928:
+            channels.append(srgb / 12.92)
+        else:
+            channels.append(((srgb + 0.055) / 1.055) ** 2.4)
+    r, g, b = channels
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def _contrast_ratio(fg: str, bg: str) -> float:
+    """Return WCAG contrast ratio between foreground and background hex colours."""
+    l1 = _relative_luminance(fg)
+    l2 = _relative_luminance(bg)
+    lighter = max(l1, l2)
+    darker  = min(l1, l2)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def run_wcag_contrast_audit() -> dict[str, float]:
+    """
+    Audit all critical text/background colour pairs used in the theme.
+    Logs a WARNING for any pair below WCAG AA thresholds:
+      - 4.5:1  for normal text (< 18pt / 14pt bold)
+      - 3.0:1  for large text  (≥ 18pt / 14pt bold)
+
+    Returns a dict of {pair_label: ratio} for all pairs checked.
+    """
+    # (label, foreground, background, is_large_text)
+    pairs: list[tuple[str, str, str, bool]] = [
+        # Primary text on dark backgrounds
+        ("text on bg",           "#E8EAF0", "#0D0F14", False),
+        ("text on card",         "#E8EAF0", "#181B26", False),
+        ("text on bg2",          "#E8EAF0", "#141720", False),
+        ("text on bg3",          "#E8EAF0", "#1C2030", False),
+
+        # Secondary text
+        ("text2 on bg",          "#9BA3BC", "#0D0F14", False),
+        ("text2 on card",        "#9BA3BC", "#181B26", False),
+
+        # Orange accent (nav, buttons, logo) — large text context
+        ("orange on bg",         "#FF6B1A", "#0D0F14", True),
+        ("orange on card",       "#FF6B1A", "#181B26", True),
+        ("white on orange btn",  "#FFFFFF", "#FF6B1A", False),
+
+        # Status colours
+        ("green on bg",          "#27C96E", "#0D0F14", True),
+        ("red on bg",            "#F74F4F", "#0D0F14", True),
+        ("yellow on bg",         "#F7C94F", "#0D0F14", True),
+        ("blue on bg",           "#4F8EF7", "#0D0F14", True),
+
+        # Party colours on card backgrounds
+        ("aitc-green on card",   "#27C96E", "#181B26", True),
+        ("bjp-orange on card",   "#FF6B1A", "#181B26", True),
+        ("others-grey on card",  "#9BA3BC", "#181B26", False),
+
+        # Live badge (red text on red-tinted bg)
+        ("red on red-lt",        "#F74F4F", "#1C0D0D", True),
+
+        # Caption / tertiary text — these are intentionally lower contrast
+        ("text3 on bg",          "#5C6480", "#0D0F14", True),   # large text only
+    ]
+
+    results: dict[str, float] = {}
+    for label, fg, bg, large in pairs:
+        ratio = _contrast_ratio(fg, bg)
+        threshold = 3.0 if large else 4.5
+        results[label] = ratio
+        if ratio < threshold:
+            logger.warning(
+                "WCAG contrast FAIL — %s: %.2f:1 (need %.1f:1, %s text) fg=%s bg=%s",
+                label, ratio, threshold, "large" if large else "normal", fg, bg,
+            )
+        else:
+            logger.debug(
+                "WCAG contrast OK — %s: %.2f:1 fg=%s bg=%s", label, ratio, fg, bg
+            )
+
+    passes  = sum(1 for label, fg, bg, large in pairs
+                  if _contrast_ratio(fg, bg) >= (3.0 if large else 4.5))
+    total   = len(pairs)
+    logger.info("WCAG audit complete: %d/%d pairs pass AA threshold.", passes, total)
+    return results
+
+
+# Run the audit once at import time so failures appear in startup logs.
+_WCAG_RESULTS = run_wcag_contrast_audit()
+
 
 DARK_THEME_CSS = """
 <style>
